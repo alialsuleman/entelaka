@@ -79,20 +79,20 @@ public class AuthenticationController {
 
 
 
-  @GetMapping("/oauth2/authorization-url")
-  public String getOAuth2AuthorizationUrl() {
-    ClientRegistration registration = clientRegistrationRepository.findByRegistrationId("google");
-
-    return UriComponentsBuilder
-            .fromUriString(registration.getProviderDetails().getAuthorizationUri())
-            .queryParam("client_id", registration.getClientId())
-            .queryParam("redirect_uri", registration.getRedirectUri())
-            .queryParam("response_type", "code")
-            .queryParam("scope", String.join(" ", registration.getScopes()))
-            .queryParam("state", "your-custom-state")
-            .build()
-            .toUriString();
-  }
+//  @GetMapping("/oauth2/authorization-url")
+//  public String getOAuth2AuthorizationUrl() {
+//    ClientRegistration registration = clientRegistrationRepository.findByRegistrationId("google");
+//
+//    return UriComponentsBuilder
+//            .fromUriString(registration.getProviderDetails().getAuthorizationUri())
+//            .queryParam("client_id", registration.getClientId())
+//            .queryParam("redirect_uri", registration.getRedirectUri())
+//            .queryParam("response_type", "code")
+//            .queryParam("scope", String.join(" ", registration.getScopes()))
+//            .queryParam("state", "your-custom-state")
+//            .build()
+//            .toUriString();
+//  }
 
 
 }
