@@ -1,6 +1,10 @@
 package com.ali.antelaka.auth;
 
+import com.ali.antelaka.token.Token;
+import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.user.Role;
+import com.ali.antelaka.user.User;
+import com.ali.antelaka.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 
 import static com.ali.antelaka.user.Role.USER;
 
@@ -26,6 +31,12 @@ public class AuthenticationController {
 
   @Autowired
   private ClientRegistrationRepository clientRegistrationRepository;
+
+  @Autowired
+  private UserRepository userRepository ;
+  @Autowired
+  private TokenRepository tokenRepository ;
+
 
   @Value("${spring.security.oauth2.client.registration.google.client-id}")
   private String google_client_id;
@@ -54,6 +65,15 @@ public class AuthenticationController {
       HttpServletResponse response
   ) throws IOException {
     service.refreshToken(request, response);
+  }
+
+  @GetMapping("/alluser")
+  public ResponseEntity<Collection<User>> alluser() {
+      return ResponseEntity.ok().body(userRepository.findAll()) ;
+  }
+  @GetMapping("/alltoken")
+  public ResponseEntity<Collection<Token>> alltoken() {
+    return ResponseEntity.ok().body(tokenRepository.findAll()) ;
   }
 
 
