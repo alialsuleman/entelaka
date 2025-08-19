@@ -1,15 +1,12 @@
 package com.ali.antelaka.config;
 
-import com.ali.antelaka.auth.AuthenticationService;
-import com.ali.antelaka.auth.RegisterRequest;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.token.TokenType;
-import com.ali.antelaka.user.Role;
-import com.ali.antelaka.user.User;
+import com.ali.antelaka.user.entity.Role;
+import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -17,7 +14,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

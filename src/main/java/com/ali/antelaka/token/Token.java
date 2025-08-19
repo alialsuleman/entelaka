@@ -1,6 +1,6 @@
 package com.ali.antelaka.token;
 
-import com.ali.antelaka.user.User;
+import com.ali.antelaka.user.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package com.ali.antelaka.user;
+package com.ali.antelaka.user.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.token.TokenType;
-import com.ali.antelaka.user.User;
+import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,6 +37,7 @@ public class AuthenticationService {
         .email(request.getEmail())
         .password(passwordEncoder.encode(request.getPassword()))
         .role(request.getRole())
+            .enabled(true)
         .build();
     var savedUser = repository.save(user);
     var jwtToken = jwtService.generateToken(user);

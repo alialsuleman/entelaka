@@ -1,29 +1,35 @@
 package com.ali.antelaka.auth;
 
+import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
-import com.ali.antelaka.user.Role;
-import com.ali.antelaka.user.User;
+import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
+import com.ali.antelaka.user.request.OtpRequest;
+import com.ali.antelaka.user.request.RestPasswordOtpRequest;
+import com.ali.antelaka.user.request.SenRestPassOtp;
+import com.ali.antelaka.user.service.OtpService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.URI;
+import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Optional;
 
-import static com.ali.antelaka.user.Role.USER;
+import static com.ali.antelaka.user.entity.Role.USER;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
@@ -37,6 +43,8 @@ public class AuthenticationController {
   @Autowired
   private TokenRepository tokenRepository ;
 
+  @Autowired
+  private OtpService otpService ;
 
   @Value("${spring.security.oauth2.client.registration.google.client-id}")
   private String google_client_id;
@@ -67,6 +75,39 @@ public class AuthenticationController {
     service.refreshToken(request, response);
   }
 
+
+
+  @PostMapping("/sendresetpasswordotp")
+  public ResponseEntity<ApiResponse> sendresetpasswordotp(  @RequestBody SenRestPassOtp request) {
+
+    if (request.getEmail() ==  null )
+    {
+      return ResponseEntity.ok(
+              ApiResponse.<Void>builder()
+                      .success(false)
+                      .message("Email is required !!!!")
+                      .status(HttpStatus.BAD_REQUEST.value())
+                      .build());
+    }
+    var user  =  this.userRepository.findByEmail(request.getEmail()).get() ;
+    this.otpService.sendotp(user , true) ;
+    ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .success(true)
+            .message("OTP sent successfully")
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.OK.value())
+            .build();
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/resetpasswordotpchecker")
+  public ResponseEntity<ApiResponse> resetpasswordotpchecker(@RequestBody RestPasswordOtpRequest request) {
+    return ResponseEntity.ok( this.otpService.checkotpRestpassword(request  )  ) ;
+  }
+
+
+
   @GetMapping("/alluser")
   public ResponseEntity<Collection<User>> alluser() {
       return ResponseEntity.ok().body(userRepository.findAll()) ;
@@ -78,6 +119,10 @@ public class AuthenticationController {
 
 
 
+  @GetMapping("/user/{id}")
+  public ResponseEntity<Optional<User>> alluser(@PathVariable Integer id) {
+    return ResponseEntity.ok().body(userRepository.findById(id)) ;
+  }
 
 //  @GetMapping("/oauth2/authorization-url")
 //  public String getOAuth2AuthorizationUrl() {

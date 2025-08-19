@@ -22,6 +22,8 @@ public class JwtService {
   private String secretKey;
   @Value("${application.security.jwt.expiration}")
   private long jwtExpiration;
+  @Value("${application.security.jwt.resetpasswordexpiration}")
+  private long jwtResetPasswordExpiration;
   @Value("${application.security.jwt.refresh-token.expiration}")
   private long refreshExpiration;
 
@@ -32,6 +34,11 @@ public class JwtService {
   public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     final Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
+  }
+
+
+  public String generateRestPasswordToken(UserDetails userDetails ) {
+    return buildToken(new HashMap<>(), userDetails, jwtResetPasswordExpiration);
   }
 
   public String generateToken(UserDetails userDetails) {

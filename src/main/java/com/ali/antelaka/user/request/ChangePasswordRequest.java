@@ -1,4 +1,4 @@
-package com.ali.antelaka.user;
+package com.ali.antelaka.user.request;
 
 import lombok.Builder;
 import lombok.Getter;

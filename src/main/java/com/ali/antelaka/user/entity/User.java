@@ -1,9 +1,10 @@
-package com.ali.antelaka.user;
+package com.ali.antelaka.user.entity;
 
 import com.ali.antelaka.token.Token;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,16 +29,31 @@ public class User implements UserDetails {
   private String email;
   private String password;
 
-  private String kkk ;
+
 
   @Enumerated(EnumType.STRING)
   private Role role;
 
-
-
   @OneToMany(mappedBy = "user")
   @JsonIgnore
   private List<Token> tokens;
+
+
+
+
+
+  private boolean enabled  ;
+  private String otp;
+  private LocalDateTime otpExpirationTime;
+
+
+  private LocalDateTime maxTimeToResetPassword;
+  private String resetPasswordOtp;
+  private LocalDateTime resetPasswordOtpExpirationTime;
+
+
+
+
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -71,6 +87,6 @@ public class User implements UserDetails {
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return this.enabled;
   }
 }

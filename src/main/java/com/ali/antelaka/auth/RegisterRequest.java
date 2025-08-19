@@ -1,6 +1,6 @@
 package com.ali.antelaka.auth;
 
-import com.ali.antelaka.user.Role;
+import com.ali.antelaka.user.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -27,15 +27,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final TokenRepository tokenRepository;
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return request.getServletPath().contains("/api/v1/auth")
+            || request.getServletPath().contains("/email/send");
+  }
+
+
+  @Override
   protected void doFilterInternal(
       @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
 
-  System.out.println("JwtAuthenticationFilter");
+    System.out.println("JwtAuthenticationFilter");
 
-    if (request.getServletPath().contains("/api/v1/auth")) {
+    if (
+            request.getServletPath().contains("/auth") ||
+            request.getServletPath().contains("/email/send"))
+    {
       filterChain.doFilter(request, response);
       return;
     }

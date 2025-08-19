@@ -2,8 +2,6 @@ package com.ali.antelaka;
 
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.auth.RegisterRequest;
-import com.ali.antelaka.user.Permission;
-import com.ali.antelaka.user.Role;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +10,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import javax.crypto.SecretKey;
 
 import java.util.Base64;
-import java.util.List;
 
-import static com.ali.antelaka.user.Role.*;
+import static com.ali.antelaka.user.entity.Role.*;
 
 @Slf4j
 @SpringBootApplication
