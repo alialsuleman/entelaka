@@ -36,9 +36,9 @@ public class SecurityConfiguration {
 
     @Autowired
     private JwtService jwtService ;
-    @Autowired
-    private  CustomOAuth2UserService customOAuth2UserService ;
-
+//    @Autowired
+//    private  CustomOAuth2UserService customOAuth2UserService ;
+//
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -63,58 +63,58 @@ public class SecurityConfiguration {
                                 .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
                 ).authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); ;
-        http
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler((request, response, authentication) -> {
-                            DefaultOAuth2User oauthUser = (DefaultOAuth2User) authentication.getPrincipal();
-                            String jwtToken = (String) oauthUser.getAttributes().get("jwtToken");
-
-
-
-                            ApiResponse<String> apiResponse = new ApiResponse<>(
-                                    true,
-                                    "Authentication successful",
-                                    jwtToken,
-                                    null,
-                                    LocalDateTime.now(),
-                                    HttpStatus.OK.value()
-                            );
-
-
-                            ObjectMapper mapper = new ObjectMapper();
-                            mapper.registerModule(new JavaTimeModule());
-                            String jsonResponse = mapper.writeValueAsString(apiResponse);
-
-                            response.setContentType("application/json");
-                            response.getWriter().write(jsonResponse);
-
-
-                        })
-                        .failureHandler((request, response, exception) -> {
-
-                            ApiResponse<Void> apiResponse = new ApiResponse<>(
-                                    false,
-                                    "OAuth2 Authentication Failed",
-                                    null,
-                                    List.of(exception.getMessage()),
-                                    LocalDateTime.now(),
-                                    HttpServletResponse.SC_UNAUTHORIZED
-                            );
-
-
-                            ObjectMapper mapper = new ObjectMapper();
-                            mapper.registerModule(new JavaTimeModule());
-                            String jsonResponse = mapper.writeValueAsString(apiResponse);
-
-
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json");
-                            response.getWriter().write(jsonResponse);
-
-
-                        })
-                ) ;
+//        http
+//                .oauth2Login(oauth2 -> oauth2
+//                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+//                        .successHandler((request, response, authentication) -> {
+//                            DefaultOAuth2User oauthUser = (DefaultOAuth2User) authentication.getPrincipal();
+//                            String jwtToken = (String) oauthUser.getAttributes().get("jwtToken");
+//
+//
+//
+//                            ApiResponse<String> apiResponse = new ApiResponse<>(
+//                                    true,
+//                                    "Authentication successful",
+//                                    jwtToken,
+//                                    null,
+//                                    LocalDateTime.now(),
+//                                    HttpStatus.OK.value()
+//                            );
+//
+//
+//                            ObjectMapper mapper = new ObjectMapper();
+//                            mapper.registerModule(new JavaTimeModule());
+//                            String jsonResponse = mapper.writeValueAsString(apiResponse);
+//
+//                            response.setContentType("application/json");
+//                            response.getWriter().write(jsonResponse);
+//
+//
+//                        })
+//                        .failureHandler((request, response, exception) -> {
+//
+//                            ApiResponse<Void> apiResponse = new ApiResponse<>(
+//                                    false,
+//                                    "OAuth2 Authentication Failed",
+//                                    null,
+//                                    List.of(exception.getMessage()),
+//                                    LocalDateTime.now(),
+//                                    HttpServletResponse.SC_UNAUTHORIZED
+//                            );
+//
+//
+//                            ObjectMapper mapper = new ObjectMapper();
+//                            mapper.registerModule(new JavaTimeModule());
+//                            String jsonResponse = mapper.writeValueAsString(apiResponse);
+//
+//
+//                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                            response.setContentType("application/json");
+//                            response.getWriter().write(jsonResponse);
+//
+//
+//                        })
+//                ) ;
 
 //        http.exceptionHandling(exception ->
 //                exception.authenticationEntryPoint((request, response, authException) -> {

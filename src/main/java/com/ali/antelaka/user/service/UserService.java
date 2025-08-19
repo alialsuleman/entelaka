@@ -2,8 +2,10 @@ package com.ali.antelaka.user.service;
 
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationService;
+import com.ali.antelaka.google.GoogleUser;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.user.UserRepository;
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +29,36 @@ public class UserService {
     @Autowired
     private AuthenticationService authenticationService ;
 
+    public User findOrCreateUser (GoogleUser googleUser)
+    {
+        var user =  this.repository.findByEmail(googleUser.getEmail())
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                        .firstname(extractFirstName(googleUser.getName()))
+                        .lastname(extractLastName(googleUser.getName()))
+                        .email(googleUser.getEmail())
+                        .password(null)
+                        .role(Role.USER)
+                        .enabled(true)
+                        .build();
+            var savedUser = repository.save(newUser);
 
+            return savedUser;
+        });
+        return user ;
+    }
+
+    private String extractFirstName(String fullName) {
+        if (fullName == null || fullName.isEmpty()) return "";
+        String[] names = fullName.split(" ");
+        return names[0];
+    }
+
+     private String extractLastName(String fullName) {
+        if (fullName == null || fullName.isEmpty()) return "";
+        String[] names = fullName.split(" ");
+        return names.length > 1 ? names[names.length - 1] : "";
+    }
 
 
 

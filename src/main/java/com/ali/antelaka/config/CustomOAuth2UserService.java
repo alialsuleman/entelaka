@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
