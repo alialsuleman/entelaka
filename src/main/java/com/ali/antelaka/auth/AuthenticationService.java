@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,25 +30,37 @@ public class AuthenticationService {
   private final AuthenticationManager authenticationManager;
 
   // store user in database and generate token's and return it
-  public AuthenticationResponse register(RegisterRequest request) {
+  public Map<?,?> register(RegisterRequest request) {
 
     System.out.println(request.getRole());
+
+
+    var lastUser = repository.findByEmail(request.getEmail()) ;
+    if (lastUser.isPresent())
+    {
+      throw new RuntimeException("This email already exists.")  ;
+    }
+
+
     var user = User.builder()
         .firstname(request.getFirstname())
         .lastname(request.getLastname())
         .email(request.getEmail())
         .password(passwordEncoder.encode(request.getPassword()))
         .role(request.getRole())
-            .enabled(true)
+        .enabled(false)
         .build();
     var savedUser = repository.save(user);
-    var jwtToken = jwtService.generateToken(user);
-    var refreshToken = jwtService.generateRefreshToken(user);
-    saveUserToken(savedUser, jwtToken);
-    return AuthenticationResponse.builder()
-        .accessToken(jwtToken)
-            .refreshToken(refreshToken)
-        .build();
+//    var jwtToken = jwtService.generateToken(user , false);
+//    var refreshToken = jwtService.generateRefreshToken(user);
+//    saveUserToken(savedUser, jwtToken);
+//    return AuthenticationResponse.builder()
+//        .accessToken(jwtToken)
+//            .refreshToken(refreshToken)
+//        .build();
+    Map<String, String> res  =  new HashMap() ;
+    res.put("message" ,"now you have to confirm your email" ) ;
+    return  res ;
   }
 
 
@@ -59,7 +73,7 @@ public class AuthenticationService {
     );
     var user = repository.findByEmail(request.getEmail())
         .orElseThrow();
-    var jwtToken = jwtService.generateToken(user);
+    var jwtToken = jwtService.generateToken(user , false);
     var refreshToken = jwtService.generateRefreshToken(user);
     revokeAllUserTokens(user);
     saveUserToken(user, jwtToken);
@@ -110,7 +124,7 @@ public class AuthenticationService {
       var user = this.repository.findByEmail(userEmail)
               .orElseThrow();
       if (jwtService.isTokenValid(refreshToken, user)) {
-        var accessToken = jwtService.generateToken(user);
+        var accessToken = jwtService.generateToken(user ,false);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
         var authResponse = AuthenticationResponse.builder()

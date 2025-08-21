@@ -49,7 +49,7 @@ public class SecurityApplication {
 					.password("password")
 					.role(ADMIN)
 					.build();
-			System.out.println("Admin token: " + service.register(admin).getAccessToken());
+			//System.out.println("Admin token: " + service.register(admin).getAccessToken());
 			System.out.println("Admin roles: " + admin.getRole());
 
 			var manager = RegisterRequest.builder()
@@ -59,7 +59,7 @@ public class SecurityApplication {
 					.password("password")
 					.role(MANAGER)
 					.build();
-			System.out.println("Manager token: " + service.register(manager).getAccessToken());
+		//	System.out.println("Manager token: " + service.register(manager).getAccessToken());
 			System.out.println("Manager roles: " + manager.getRole());
 
 			var user = RegisterRequest.builder()
@@ -69,7 +69,7 @@ public class SecurityApplication {
 					.password("password")
 					.role(USER)
 					.build();
-			System.out.println("USer token: " + service.register(user).getAccessToken());
+		//	System.out.println("USer token: " + service.register(user).getAccessToken());
 			System.out.println("USer roles: " + user.getRole());
 
 		};

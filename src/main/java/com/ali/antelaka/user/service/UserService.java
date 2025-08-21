@@ -45,6 +45,11 @@ public class UserService {
 
             return savedUser;
         });
+        if (user.isEnabled() ==  false )
+        {
+            user.setEnabled(true);
+            user = repository.save(user) ;
+        }
         return user ;
     }
 

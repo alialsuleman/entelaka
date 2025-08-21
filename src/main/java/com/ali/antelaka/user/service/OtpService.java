@@ -7,8 +7,7 @@ import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.mail.EmailService;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
-import com.ali.antelaka.user.request.OtpRequest;
-import com.ali.antelaka.user.request.RestPasswordOtpRequest;
+import com.ali.antelaka.user.request.CheckOtpRequest;
 import com.ali.antelaka.user.response.TokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Random;
 
 @Service
@@ -44,7 +42,6 @@ public class OtpService {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
-
     public void sendotp(Principal connectedUser, boolean resetpassword ) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
         this.sendotp(user , resetpassword);
@@ -65,50 +62,8 @@ public class OtpService {
         this.emailService.sendEmail(user.getEmail() , "OTP Verification", "Your OTP code is:"+otp);
     }
 
-    public ApiResponse<?> checkotp( OtpRequest request, Principal connectedUser) {
 
-
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-
-        if (user.getOtp() == null || user.getOtpExpirationTime() == null) {
-            return
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("No OTP found. Request a new one.")
-                            .status(HttpStatus.BAD_REQUEST.value())
-                            .build();
-
-        }
-
-        boolean isValid = user.getOtp().equals(request.getOtp())
-                && LocalDateTime.now().isBefore(user.getOtpExpirationTime());
-
-        if (isValid) {
-            user.setOtp(null);
-            user.setOtpExpirationTime(null);
-            user.setEnabled(true );
-            userRepository.save(user);
-
-            return
-                    ApiResponse.<Void>builder()
-                            .success(true)
-                            .message("OTP is valid")
-                            .status(HttpStatus.OK.value())
-                            .build() ;
-
-        } else {
-            return
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("Invalid or expired OTP")
-                            .status(HttpStatus.UNAUTHORIZED.value())
-                            .build();
-
-        }
-    }
-
-
-    public ApiResponse<?> checkotpRestpassword(RestPasswordOtpRequest request) {
+    public ApiResponse<?> checkOtp(CheckOtpRequest request) {
 
         if (request.getEmail()== null)
         {
@@ -132,25 +87,57 @@ public class OtpService {
         var user = user1.get() ;
 
 
-        if (user.getResetPasswordOtp() == null || user.getResetPasswordOtpExpirationTime() == null) {
-            return
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("No OTP found. Request a new one.")
-                            .status(HttpStatus.BAD_REQUEST.value())
-                            .build();
 
+        boolean isForRestPassword =  false ;
+        if (request.getSetpassword() ==1 ) isForRestPassword = true ;
+
+        boolean isValid = false ;
+
+        if (isForRestPassword )
+        {
+            if (user.getResetPasswordOtp() == null || user.getResetPasswordOtpExpirationTime() == null) {
+                return
+                        ApiResponse.<Void>builder()
+                                .success(false)
+                                .message("No OTP found. Request a new one.")
+                                .status(HttpStatus.BAD_REQUEST.value())
+                                .build();
+
+            }
+
+            isValid = user.getResetPasswordOtp().equals(request.getOtp())
+                    && LocalDateTime.now().isBefore(user.getResetPasswordOtpExpirationTime());
         }
+       else  {
 
-        boolean isValid = user.getResetPasswordOtp().equals(request.getOtp())
-                && LocalDateTime.now().isBefore(user.getResetPasswordOtpExpirationTime());
+
+            if (user.getOtp() == null || user.getOtpExpirationTime() == null) {
+                return
+                        ApiResponse.<Void>builder()
+                                .success(false)
+                                .message("No OTP found. Request a new one.")
+                                .status(HttpStatus.BAD_REQUEST.value())
+                                .build();
+
+            }
+            System.out.println(LocalDateTime.now()  + " " +user.getOtpExpirationTime());
+            isValid = user.getOtp().equals(request.getOtp())
+                    && LocalDateTime.now().isBefore( user.getOtpExpirationTime());
+        }
 
         if (isValid) {
             user.setResetPasswordOtp(null);
             user.setResetPasswordOtpExpirationTime(null);
-            user.setMaxTimeToResetPassword(LocalDateTime.now().plusMinutes(jwtResetPasswordExpiration/60000));
+            user.setOtpExpirationTime(null);
+            user.setOtp(null);
+            user.setEnabled(true );
 
-            String token = this.jwtService.generateRestPasswordToken(user) ;
+            if (isForRestPassword)
+                user.setMaxTimeToResetPassword(
+                        LocalDateTime.now().plusMinutes(jwtResetPasswordExpiration/60000));
+
+
+            String token = this.jwtService.generateToken(user , isForRestPassword) ;
             this.authenticationService.revokeAllUserTokens(user);
             this.authenticationService.saveUserToken(user, token);
             userRepository.save(user);
@@ -161,7 +148,7 @@ public class OtpService {
                     ApiResponse.builder()
                             .success(true)
                             .data(new TokenResponse(token , null))
-                            .message("OTP is valid , you have to reset password in 15. min")
+                            .message("OTP is valid")
                             .status(HttpStatus.OK.value())
                             .build() ;
 

@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +28,10 @@ public class User implements UserDetails {
   private Integer id;
   private String firstname;
   private String lastname;
+
+  @Email(message = "Email must be valid")
+  @NotBlank(message = "Email required")
+  @Column(unique = true)
   private String email;
   private String password;
 
@@ -88,5 +94,9 @@ public class User implements UserDetails {
   @Override
   public boolean isEnabled() {
     return this.enabled;
+  }
+
+  public void setEnabled(boolean  x ) {
+     this.enabled =x ;
   }
 }

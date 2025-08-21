@@ -13,7 +13,27 @@ import java.util.List;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-     @ExceptionHandler(AuthenticationException.class)
+
+
+
+    @ExceptionHandler(  RuntimeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthException2(RuntimeException ex) {
+        System.out.println(ex.getMessage()) ;
+        ApiResponse<Void> response = new ApiResponse<>(
+                false,
+                ex.getMessage(),
+                null,
+                List.of(ex.getLocalizedMessage()),
+                LocalDateTime.now(),
+                404
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+
+
+
+    @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthException(AuthenticationException ex) {
         ApiResponse<Void> response = new ApiResponse<>(
                 false,
@@ -41,6 +61,7 @@ public class GlobalExceptionHandler {
 
      @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleAllExceptions(Exception ex) {
+        System.out.println(ex.toString());
         ApiResponse<Void> response = new ApiResponse<>(
                 false,
                 "Internal Server Error",
@@ -49,6 +70,8 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value()
         );
-        return ResponseEntity.internalServerError().body(response);
+        return ResponseEntity.ok(response);
     }
+
+
 }

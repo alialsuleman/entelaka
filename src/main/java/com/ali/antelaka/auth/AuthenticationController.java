@@ -5,25 +5,24 @@ import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
-import com.ali.antelaka.user.request.OtpRequest;
-import com.ali.antelaka.user.request.RestPasswordOtpRequest;
-import com.ali.antelaka.user.request.SenRestPassOtp;
+import com.ali.antelaka.user.request.CheckOtpRequest;
+  import com.ali.antelaka.user.request.SendOtpRequest;
 import com.ali.antelaka.user.service.OtpService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.ali.antelaka.user.entity.Role.USER;
@@ -51,21 +50,40 @@ public class AuthenticationController {
 
 
   @PostMapping("/register")
-  public ResponseEntity<AuthenticationResponse> register(
-      @RequestBody RegisterRequest request
+  public ResponseEntity<ApiResponse<Map<?,?>>> register(
+          @Valid @RequestBody RegisterRequest request
   ) {
     request.setRole(USER);
-    return ResponseEntity.ok(service.register(request));
+    ApiResponse<Map<?,?>> response = ApiResponse.<Map<?,?>>builder()
+            .success(true)
+            .message("register successfully")
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.OK.value())
+            .data (service.register(request))
+            .build();
+
+    return ResponseEntity.ok(response);
+
   }
 
 
   // login
   @PostMapping("/authenticate")
-  public ResponseEntity<AuthenticationResponse> authenticate(
-      @RequestBody AuthenticationRequest request
+  public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(
+          @Valid  @RequestBody AuthenticationRequest request
   ) {
-    return ResponseEntity.ok(service.authenticate(request));
-  }
+    ApiResponse<AuthenticationResponse> response = ApiResponse.<AuthenticationResponse>builder()
+            .success(true)
+            .message("login successfully")
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.OK.value())
+            .data (service.authenticate(request))
+            .build();
+
+    return ResponseEntity.ok(response);
+
+
+   }
 
   @PostMapping("/refresh-token")
   public void refreshToken(
@@ -77,10 +95,15 @@ public class AuthenticationController {
 
 
 
-  @PostMapping("/sendresetpasswordotp")
-  public ResponseEntity<ApiResponse> sendresetpasswordotp(  @RequestBody SenRestPassOtp request) {
+  @PostMapping("/sendotp")
+  public ResponseEntity<ApiResponse> sendOtp( @Valid @RequestBody SendOtpRequest request) {
 
-    if (request.getEmail() ==  null )
+    boolean flag = false ;
+    if (request.getSetpassword() == 1 )
+       flag = true ;
+
+
+    if (request.getEmail() ==  null  )
     {
       return ResponseEntity.ok(
               ApiResponse.<Void>builder()
@@ -89,8 +112,23 @@ public class AuthenticationController {
                       .status(HttpStatus.BAD_REQUEST.value())
                       .build());
     }
-    var user  =  this.userRepository.findByEmail(request.getEmail()).get() ;
-    this.otpService.sendotp(user , true) ;
+
+    var user1  =  this.userRepository.findByEmail(request.getEmail()) ;
+
+    if (!user1.isPresent())
+    {
+      ApiResponse<Void> response = ApiResponse.<Void>builder()
+              .success(false)
+              .message("you have to register first")
+              .timestamp(LocalDateTime.now())
+              .status(HttpStatus.BAD_REQUEST.value())
+              .build();
+
+      return ResponseEntity.ok(response);
+    }
+    var  user = user1.get() ;
+    this.otpService.sendotp(user , flag) ;
+
     ApiResponse<Void> response = ApiResponse.<Void>builder()
             .success(true)
             .message("OTP sent successfully")
@@ -101,13 +139,17 @@ public class AuthenticationController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping("/resetpasswordotpchecker")
-  public ResponseEntity<ApiResponse> resetpasswordotpchecker(@RequestBody RestPasswordOtpRequest request) {
-    return ResponseEntity.ok( this.otpService.checkotpRestpassword(request  )  ) ;
+
+  @PostMapping("/checkotp")
+  public ResponseEntity<ApiResponse> checkotp(@Valid @RequestBody CheckOtpRequest request) {
+    return ResponseEntity.ok( this.otpService.checkOtp( request )  ) ;
   }
 
 
 
+
+
+  // testing section
   @GetMapping("/alluser")
   public ResponseEntity<Collection<User>> alluser() {
       return ResponseEntity.ok().body(userRepository.findAll()) ;
@@ -116,8 +158,6 @@ public class AuthenticationController {
   public ResponseEntity<Collection<Token>> alltoken() {
     return ResponseEntity.ok().body(tokenRepository.findAll()) ;
   }
-
-
 
   @GetMapping("/user/{id}")
   public ResponseEntity<Optional<User>> alluser(@PathVariable Integer id) {

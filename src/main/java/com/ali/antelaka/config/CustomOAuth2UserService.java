@@ -42,7 +42,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String firstname = names.length > 0 ? names[0] : "";
         String lastname = names.length > 1 ? names[1] : "";
 
-        // إنشاء أو تحديث المستخدم في قاعدة البيانات
         var user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = User.builder()
@@ -57,10 +56,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     return savedUser;
                 });
 
-        // توليد JWT token
-        String jwtToken = jwtService.generateToken(user);
+         String jwtToken = jwtService.generateToken(user,false);
 
-        // حفظ Token في قاعدة البيانات
 
         revokeAllUserTokens(user);
         saveUserToken(user, jwtToken);
@@ -73,7 +70,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return new DefaultOAuth2User(
                 user.getAuthorities(),
                 attributes,
-                "email" // اسم الـ attribute الذي يستخدم كـ name identifier
+                "email"
         );
 
      }

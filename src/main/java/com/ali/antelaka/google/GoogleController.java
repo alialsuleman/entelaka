@@ -1,10 +1,12 @@
 package com.ali.antelaka.google;
 
 
+import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,17 +35,23 @@ public class GoogleController {
     private JwtService jwtService;
 
     @PostMapping("/google")
-    public ResponseEntity<?> googleAuth(@RequestBody Map<String, String> request) {
-        try {
+    public ResponseEntity<?> googleAuth(  @RequestBody Map<String, String> request) {
+
             String idToken = request.get("id_token");
 
             if (idToken == null || idToken.isEmpty()) {
-                return ResponseEntity.badRequest().body("ID token is required");
+
+
+                return ResponseEntity.badRequest().body( ApiResponse.<Void>builder()
+                        .success(false)
+                        .message("ID token is required")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .build());
             }
             GoogleUser googleUser = googleAuthService.verifyIdToken(idToken);
 
             User user = userService.findOrCreateUser(googleUser);
-            String jwtToken = this.jwtService.generateToken(user);
+            String jwtToken = this.jwtService.generateToken(user , false);
 
 
             this.authenticationService.revokeAllUserTokens(user);
@@ -55,15 +63,19 @@ public class GoogleController {
             response.put("token", jwtToken);
             response.put("user", user);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
 
-        }catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Authentication failed: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error");
-        }
+                    ApiResponse.<Map<?, ?>>builder()
+                            .success(true)
+                            .data(response)
+                            .message("ID token is required")
+                            .status(HttpStatus.BAD_REQUEST.value())
+                            .build()
+
+
+            );
+
+
     }
 }
 

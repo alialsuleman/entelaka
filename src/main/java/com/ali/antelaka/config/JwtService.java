@@ -37,12 +37,9 @@ public class JwtService {
   }
 
 
-  public String generateRestPasswordToken(UserDetails userDetails ) {
-    return buildToken(new HashMap<>(), userDetails, jwtResetPasswordExpiration);
-  }
-
-  public String generateToken(UserDetails userDetails) {
-    return generateToken(new HashMap<>(), userDetails);
+  public String generateToken(UserDetails userDetails , boolean restPassword) {
+    if (restPassword == true)   return buildToken(new HashMap<>(), userDetails, jwtResetPasswordExpiration);
+    else return generateToken(new HashMap<>(), userDetails);
   }
 
   public String generateToken(

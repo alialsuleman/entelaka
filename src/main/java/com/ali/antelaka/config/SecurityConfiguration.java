@@ -63,6 +63,59 @@ public class SecurityConfiguration {
                                 .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
                 ).authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); ;
+
+        http.exceptionHandling(exception -> {
+            exception
+                     .authenticationEntryPoint((request, response, authException) -> {
+                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+                         ApiResponse<Void> apiResponse = new ApiResponse<>(
+                                 false,
+                                 "Authentication Failed",
+                                 null,
+                                 List.of(authException.getMessage()),
+                                 LocalDateTime.now(),
+                                 HttpStatus.UNAUTHORIZED.value()
+                         );
+
+                         ObjectMapper mapper = new ObjectMapper();
+                         mapper.registerModule(new JavaTimeModule());
+                         String jsonResponse = mapper.writeValueAsString(apiResponse);
+
+                         response.setContentType("application/json");
+                         response.getWriter().write(jsonResponse);
+                     })
+                     .accessDeniedHandler((request, response, accessDeniedException) -> {
+
+
+                         response.setStatus(HttpStatus.FORBIDDEN.value());
+
+                         ApiResponse<Void> apiResponse = new ApiResponse<>(
+                                 false,
+                                 "Access Denied",
+                                 null,
+                                 List.of(accessDeniedException.getMessage()),
+                                 LocalDateTime.now(),
+                                 HttpStatus.FORBIDDEN.value()
+                         );
+
+
+
+                        ObjectMapper mapper = new ObjectMapper();
+                        mapper.registerModule(new JavaTimeModule());
+                        String jsonResponse = mapper.writeValueAsString(apiResponse);
+
+                        response.setContentType("application/json");
+                        response.getWriter().write(jsonResponse);
+
+                    });
+        });
+
+        return http.build();
+    }
+
+
+}
 //        http
 //                .oauth2Login(oauth2 -> oauth2
 //                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
@@ -138,24 +191,3 @@ public class SecurityConfiguration {
 //                    response.setContentType("application/json");
 //                    response.getWriter().write(jsonResponse);
 //                })  );
-        http.exceptionHandling(exception -> {
-            exception
-                     .authenticationEntryPoint((request, response, authException) -> {
-                        throw new ResponseStatusException(
-                                HttpStatus.UNAUTHORIZED,
-                                "Authentication Failed: " + authException.getMessage()
-                        );
-                    })
-                     .accessDeniedHandler((request, response, accessDeniedException) -> {
-                        throw new ResponseStatusException(
-                                HttpStatus.FORBIDDEN,
-                                "Access Denied: " + accessDeniedException.getMessage()
-                        );
-                    });
-        });
-
-        return http.build();
-    }
-
-
-}

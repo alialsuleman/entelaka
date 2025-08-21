@@ -1,14 +1,20 @@
 package com.ali.antelaka.config;
 
+import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.token.TokenRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    return request.getServletPath().contains("/api/v1/auth")
+    return request.getServletPath().contains("/auth")
             || request.getServletPath().contains("/email/send");
   }
 
@@ -40,50 +46,90 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
 
-    System.out.println("JwtAuthenticationFilter");
+      System.out.println("JwtAuthenticationFilter");
 
-    if (
-            request.getServletPath().contains("/auth") ||
-            request.getServletPath().contains("/email/send"))
-    {
-      filterChain.doFilter(request, response);
-      return;
-    }
-
-    // Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQG1haWwuY29tIiwiaWF0IjoxNzU1MjY1MzcyLCJleHAiOjE3NTUzNTE3NzJ9.cS3cxxVYXcOK1fkvR0RMIuxVhOw3dFVgTSJvkTD8Ep8
-    final String authHeader = request.getHeader("Authorization");
-    final String jwt;
-    final String userEmail;
-    if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-      filterChain.doFilter(request, response);
-      return;
-    }
-    jwt = authHeader.substring(7);
-    userEmail = jwtService.extractUsername(jwt);
-    if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-
-      UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-      var isTokenValid = tokenRepository.findByToken(jwt)
-          .map(t -> !t.isExpired() && !t.isRevoked())
-          .orElse(false);
-
-      if (jwtService.isTokenValid(jwt, userDetails) && isTokenValid) {
-
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-            userDetails,
-            null,
-            userDetails.getAuthorities()
-        );
-
-        authToken.setDetails(
-            new WebAuthenticationDetailsSource().buildDetails(request)
-        );
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-
-
+      if (
+              request.getServletPath().contains("/auth") ||
+              request.getServletPath().contains("/email/send"))
+      {
+        filterChain.doFilter(request, response);
+        return;
       }
-    }
-    filterChain.doFilter(request, response);
+
+      // Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQG1haWwuY29tIiwiaWF0IjoxNzU1MjY1MzcyLCJleHAiOjE3NTUzNTE3NzJ9.cS3cxxVYXcOK1fkvR0RMIuxVhOw3dFVgTSJvkTD8Ep8
+      final String authHeader = request.getHeader("Authorization");
+      final String jwt;
+      final String userEmail;
+      if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+      jwt = authHeader.substring(7);
+      userEmail = jwtService.extractUsername(jwt);
+
+
+
+
+      if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+        var isTokenValid = tokenRepository.findByToken(jwt)
+            .map(t -> !t.isExpired() && !t.isRevoked())
+            .orElse(false);
+        boolean isEnabled = userDetails.isEnabled() ;
+
+        if (jwtService.isTokenValid(jwt, userDetails) && isTokenValid) {
+
+
+
+          if (!isEnabled)
+          {
+            System.out.print("isEnabled");
+            sendErrorResponse(response, "You must confirm your email first.", HttpStatus.UNAUTHORIZED);
+            return;
+           }
+
+
+          UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+              userDetails,
+              null,
+              userDetails.getAuthorities()
+          );
+
+          authToken.setDetails(
+              new WebAuthenticationDetailsSource().buildDetails(request)
+          );
+          SecurityContextHolder.getContext().setAuthentication(authToken);
+
+
+        }
+      }
+      filterChain.doFilter(request, response);
+  }
+
+
+  private void sendErrorResponse(HttpServletResponse response, String message, HttpStatus status) throws IOException {
+
+
+    response.setStatus(HttpStatus.FORBIDDEN.value());
+
+    ApiResponse<Void> apiResponse = new ApiResponse<>(
+            false,
+            "Authentication Failed",
+            null,
+            List.of(message),
+            LocalDateTime.now(),
+            HttpStatus.FORBIDDEN.value()
+    );
+
+
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule());
+    String jsonResponse = mapper.writeValueAsString(apiResponse);
+
+    response.setContentType("application/json");
+    response.getWriter().write(jsonResponse);
   }
 }

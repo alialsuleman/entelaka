@@ -73,7 +73,7 @@ public class GoogleAuthService {
 
             return googleUser;
         } catch (HttpClientErrorException e) {
-            throw new RuntimeException("Invalid Google token");
+             throw new RuntimeException("Invalid Google token");
         } catch (Exception e) {
             throw new RuntimeException("Token verification error: " + e.getMessage());
         }
