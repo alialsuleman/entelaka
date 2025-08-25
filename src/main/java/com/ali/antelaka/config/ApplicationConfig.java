@@ -1,6 +1,7 @@
 package com.ali.antelaka.config;
 
 import com.ali.antelaka.auditing.ApplicationAuditAware;
+import com.ali.antelaka.exception.CustomAuthenticationException;
 import com.ali.antelaka.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,13 +46,17 @@ public class ApplicationConfig {
   //  the only responsiple return the UserDetails from username
   @Bean
   public UserDetailsService userDetailsService() {
-    return username -> {
+
+
+    return username ->  {
 
       UserDetails user = repository.findByEmail(username)
               .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
       if (!user.isEnabled()) {
-        throw new DisabledException("You must confirm your email first.");
+
+        System.out.println("App Config ");
+        throw new CustomAuthenticationException("You must confirm your email first." );
       }
 
       return user;

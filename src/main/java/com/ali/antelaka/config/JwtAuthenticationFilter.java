@@ -2,7 +2,7 @@ package com.ali.antelaka.config;
 
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.token.TokenRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -86,7 +88,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           if (!isEnabled)
           {
             System.out.print("isEnabled");
-            sendErrorResponse(response, "You must confirm your email first.", HttpStatus.UNAUTHORIZED);
+            Map m = new HashMap<String, String>( ) ;
+            m.put("accessToken" , null);
+            m.put("refreshToken" , null);
+            m.put("Verified" , false);
+            sendErrorResponse(response, "You must confirm your email first.", HttpStatus.UNAUTHORIZED , m);
             return;
            }
 
@@ -109,22 +115,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
 
-  private void sendErrorResponse(HttpServletResponse response, String message, HttpStatus status) throws IOException {
+  private void sendErrorResponse(HttpServletResponse response, String message, HttpStatus status , Map data  ) throws IOException {
 
 
-    response.setStatus(HttpStatus.FORBIDDEN.value());
+    response.setStatus(status.value());
 
-    ApiResponse<Void> apiResponse = new ApiResponse<>(
+    ApiResponse<Map<?,?>> apiResponse = new ApiResponse<Map<?,?>>(
             false,
             "Authentication Failed",
-            null,
+            data,
             List.of(message),
             LocalDateTime.now(),
             HttpStatus.FORBIDDEN.value()
     );
 
 
-
+ System.out.println("123");
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
     String jsonResponse = mapper.writeValueAsString(apiResponse);

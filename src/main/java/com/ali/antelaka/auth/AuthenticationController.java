@@ -54,6 +54,8 @@ public class AuthenticationController {
           @Valid @RequestBody RegisterRequest request
   ) {
     request.setRole(USER);
+
+
     ApiResponse<Map<?,?>> response = ApiResponse.<Map<?,?>>builder()
             .success(true)
             .message("register successfully")
@@ -85,12 +87,38 @@ public class AuthenticationController {
 
    }
 
-  @PostMapping("/refresh-token")
-  public void refreshToken(
+  @GetMapping("/refresh-token")
+  public ResponseEntity<?> refreshToken(
       HttpServletRequest request,
       HttpServletResponse response
   ) throws IOException {
-    service.refreshToken(request, response);
+
+    var res=  service.refreshToken(request, response);
+    if (res == null)
+    {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value()).body(
+              ApiResponse.<Void>builder()
+                      .success(false)
+                      .message("login again")
+                      .data(null)
+                      .status(HttpStatus.UNAUTHORIZED.value())
+                      .build());
+    }
+    else {
+
+
+      ApiResponse<AuthenticationResponse> response2 = ApiResponse.<AuthenticationResponse>builder()
+              .success(true)
+              .message("done !")
+              .timestamp(LocalDateTime.now())
+              .status(HttpStatus.OK.value())
+              .data(res)
+              .build();
+
+      return ResponseEntity.ok(response2);
+
+    }
+
   }
 
 
@@ -105,7 +133,7 @@ public class AuthenticationController {
 
     if (request.getEmail() ==  null  )
     {
-      return ResponseEntity.ok(
+      return ResponseEntity.badRequest().body(
               ApiResponse.<Void>builder()
                       .success(false)
                       .message("Email is required !!!!")
@@ -124,7 +152,7 @@ public class AuthenticationController {
               .status(HttpStatus.BAD_REQUEST.value())
               .build();
 
-      return ResponseEntity.ok(response);
+      return ResponseEntity.status(response.getStatus()).body(response);
     }
     var  user = user1.get() ;
     this.otpService.sendotp(user , flag) ;
@@ -142,7 +170,8 @@ public class AuthenticationController {
 
   @PostMapping("/checkotp")
   public ResponseEntity<ApiResponse> checkotp(@Valid @RequestBody CheckOtpRequest request) {
-    return ResponseEntity.ok( this.otpService.checkOtp( request )  ) ;
+    ApiResponse res = this.otpService.checkOtp( request ) ;
+    return ResponseEntity.status(res.getStatus()).body(res) ;
   }
 
 
@@ -162,6 +191,14 @@ public class AuthenticationController {
   @GetMapping("/user/{id}")
   public ResponseEntity<Optional<User>> alluser(@PathVariable Integer id) {
     return ResponseEntity.ok().body(userRepository.findById(id)) ;
+  }
+
+  @DeleteMapping("/deleteall")
+  public ResponseEntity<String> deleteall() {
+    this.tokenRepository.deleteAll();
+    this.userRepository.deleteAll();
+
+    return ResponseEntity.ok().body("done !") ;
   }
 
 //  @GetMapping("/oauth2/authorization-url")

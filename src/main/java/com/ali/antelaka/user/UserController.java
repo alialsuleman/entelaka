@@ -41,7 +41,7 @@ public class UserController {
     private OtpService otpService;
 
 
-    @GetMapping
+    @GetMapping("/hello")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public String hello (Authentication authentication)
     {

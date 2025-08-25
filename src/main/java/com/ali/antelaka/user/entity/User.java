@@ -57,8 +57,8 @@ public class User implements UserDetails {
   private String resetPasswordOtp;
   private LocalDateTime resetPasswordOtpExpirationTime;
 
-
-
+  private Integer attempts ;
+  private LocalDateTime lastOtpSentAt ;
 
 
   @Override
