@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -156,10 +157,19 @@ public class AuthenticationController {
     }
     var  user = user1.get() ;
     this.otpService.sendotp(user , flag) ;
+    Map m = new HashMap() ;
+    if (request.getSetpassword() ==1)
+    {
+      m.put("otpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
+    }
+    else {
+      m.put("otpExpirationTime", user.getOtpExpirationTime()) ;
+    }
 
-    ApiResponse<Void> response = ApiResponse.<Void>builder()
+    ApiResponse<?> response = ApiResponse.builder()
             .success(true)
             .message("OTP sent successfully")
+            .data(m)
             .timestamp(LocalDateTime.now())
             .status(HttpStatus.OK.value())
             .build();
