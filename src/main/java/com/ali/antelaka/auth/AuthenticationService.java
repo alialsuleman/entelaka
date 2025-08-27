@@ -31,7 +31,7 @@ public class AuthenticationService {
   private final AuthenticationManager authenticationManager;
 
   // store user in database and generate token's and return it
-  public Map<?,?> register(RegisterRequest request) {
+  public AuthenticationResponse register(RegisterRequest request) {
 
     System.out.println(request.getRole());
 
@@ -59,9 +59,14 @@ public class AuthenticationService {
 //        .accessToken(jwtToken)
 //            .refreshToken(refreshToken)
 //        .build();
-    Map<String, String> res  =  new HashMap() ;
-    res.put("message" ,"now you have to confirm your email" ) ;
-    return  res ;
+
+    var authenticationResponse = AuthenticationResponse.builder()
+            .accessToken(null)
+            .refreshToken(null)
+            .verified(user.isEnabled())
+            .build();
+
+    return  authenticationResponse ;
   }
 
 

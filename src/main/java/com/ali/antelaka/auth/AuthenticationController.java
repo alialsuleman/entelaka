@@ -51,15 +51,15 @@ public class AuthenticationController {
 
 
   @PostMapping("/register")
-  public ResponseEntity<ApiResponse<Map<?,?>>> register(
+  public ResponseEntity<ApiResponse<?>> register(
           @Valid @RequestBody RegisterRequest request
   ) {
     request.setRole(USER);
 
 
-    ApiResponse<Map<?,?>> response = ApiResponse.<Map<?,?>>builder()
+    ApiResponse<?> response = ApiResponse.builder()
             .success(true)
-            .message("register successfully")
+            .message("register successfully! now you have to confirm your email")
             .timestamp(LocalDateTime.now())
             .status(HttpStatus.OK.value())
             .data (service.register(request))
