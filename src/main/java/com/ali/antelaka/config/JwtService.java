@@ -60,6 +60,13 @@ public class JwtService {
           UserDetails userDetails,
           long expiration
   ) {
+
+    System.out.println(new Date(System.currentTimeMillis()).toString()  +
+            " "  +
+            new Date(System.currentTimeMillis() + expiration).toString()
+            );
+
+
     return Jwts
             .builder()
             .setClaims(extraClaims)
@@ -72,6 +79,7 @@ public class JwtService {
 
   public boolean isTokenValid(String token, UserDetails userDetails) {
     final String username = extractUsername(token);
+    System.out.println(extractExpiration(token).toString());
     return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
   }
 

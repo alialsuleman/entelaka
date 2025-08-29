@@ -179,7 +179,7 @@ public class AuthenticationController {
         m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
         ApiResponse<?> response = ApiResponse.builder()
                 .success(true)
-                .message("OTP sent successfully")
+                .message("A new OTP code has been sent. Please check your email or phone.")
                 .data(m)
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.OK.value())
@@ -208,7 +208,7 @@ public class AuthenticationController {
         m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
         ApiResponse<?> response = ApiResponse.builder()
                 .success(true)
-                .message("OTP sent successfully")
+                .message("The previous OTP code is still valid. You can use it.")
                 .data(m)
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.OK.value())

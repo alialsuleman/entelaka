@@ -2,6 +2,7 @@ package com.ali.antelaka.google;
 
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.auth.AuthenticationResponse;
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.user.entity.User;
@@ -44,7 +45,7 @@ public class GoogleController {
 
                 return ResponseEntity.badRequest().body( ApiResponse.<Void>builder()
                         .success(false)
-                        .message("ID token is required")
+                        .message("login successfully")
                         .status(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
@@ -52,23 +53,22 @@ public class GoogleController {
 
             User user = userService.findOrCreateUser(googleUser);
             String jwtToken = this.jwtService.generateToken(user , false);
-
+            String refreshToken = this.jwtService.generateRefreshToken(user) ;
 
             this.authenticationService.revokeAllUserTokens(user);
             this.authenticationService.saveUserToken(user, jwtToken);
 
 
+        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder().
+        accessToken(jwtToken). refreshToken(refreshToken).verified(true) .build();
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", jwtToken);
-            response.put("user", user);
 
             return ResponseEntity.ok(
 
-                    ApiResponse.<Map<?, ?>>builder()
+                    ApiResponse.builder()
                             .success(true)
-                            .data(response)
-                            .message("ID token is required")
+                            .data(authenticationResponse)
+                            .message("login successfully")
                             .status(HttpStatus.BAD_REQUEST.value())
                             .build()
 

@@ -41,10 +41,10 @@ public class GoogleAuthService {
             Map<String, Object> tokenInfo = response.getBody();
             System.out.println(tokenInfo);
             //  un comment this when you set the real google client id
-//            String audience = (String) tokenInfo.get("aud");
-//            if (!audience.equals(googleClientId)) {
-//                throw new RuntimeException("Invalid token audience");
-//            }
+            String audience = (String) tokenInfo.get("aud");
+            if (!audience.equals(googleClientId)) {
+                throw new RuntimeException("Invalid token audience");
+            }
             Object emailVerifiedObj = tokenInfo.get("email_verified");
             boolean emailVerified;
 

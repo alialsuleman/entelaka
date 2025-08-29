@@ -2,6 +2,7 @@ package com.ali.antelaka.config;
 
 import com.ali.antelaka.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -71,19 +72,25 @@ public class SecurityConfiguration {
 
                          ApiResponse<Void> apiResponse = new ApiResponse<>(
                                  false,
-                                 "Authentication Failed",
+                                 "Authentication Failed !!",
                                  null,
                                  List.of(authException.getMessage()),
                                  LocalDateTime.now(),
                                  HttpStatus.UNAUTHORIZED.value()
                          );
 
+
+
+
                          ObjectMapper mapper = new ObjectMapper();
                          mapper.registerModule(new JavaTimeModule());
+                         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
                          String jsonResponse = mapper.writeValueAsString(apiResponse);
 
                          response.setContentType("application/json");
                          response.getWriter().write(jsonResponse);
+
+
                      })
                      .accessDeniedHandler((request, response, accessDeniedException) -> {
 
@@ -103,6 +110,7 @@ public class SecurityConfiguration {
 
                         ObjectMapper mapper = new ObjectMapper();
                         mapper.registerModule(new JavaTimeModule());
+                        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
                         String jsonResponse = mapper.writeValueAsString(apiResponse);
 
                         response.setContentType("application/json");

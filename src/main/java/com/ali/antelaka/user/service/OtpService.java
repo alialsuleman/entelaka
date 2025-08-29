@@ -78,7 +78,7 @@ public class OtpService {
                     }
                     user.setNumberOfOtpSending(user.getNumberOfOtpSending()+1);
                     if (user.getNumberOfOtpSending()%3 ==0 ) {
-                        if (Duration.between(LocalDateTime.now() , user.getLastOtpSentAt()).getSeconds()/60  < 10 ) {
+                        if (Duration.between(LocalDateTime.now() , user.getLastOtpSentAt()).getSeconds()/60  < 20 ) {
                             manyAttempts = 59 ;
                         }else user.setNumberOfOtpSending(0); ;
 
