@@ -6,7 +6,7 @@ import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.request.CheckOtpRequest;
-  import com.ali.antelaka.user.request.SendOtpRequest;
+import com.ali.antelaka.user.request.SendOtpRequest;
 import com.ali.antelaka.user.service.OtpService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -156,25 +156,67 @@ public class AuthenticationController {
       return ResponseEntity.status(response.getStatus()).body(response);
     }
     var  user = user1.get() ;
-    this.otpService.sendotp(user , flag) ;
-    Map m = new HashMap() ;
-    if (request.getSetpassword() ==1)
+
+    try {
+
+
+
+        this.otpService.sendotp(user , flag) ;
+        Map m = new HashMap() ;
+        int numberOfAttempts  = 0 ;
+        if (request.getSetpassword() ==1)
+        {
+          numberOfAttempts =  user.getResetPasswordOtpAttempts() ;
+          m.put("ResetPasswordOtpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
+          m.put("ResetPasswordOtpSendingBanTime", user.getResetPasswordOTPSendingBanTime()) ;
+
+        }
+        else {
+          user.getAttempts() ;
+          m.put("otpExpirationTime", user.getOtpExpirationTime()) ;
+          m.put("OTPSendingBanTime", user.getOTPSendingBanTime()) ;
+        }
+        m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(true)
+                .message("OTP sent successfully")
+                .data(m)
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }catch (Exception ex)
     {
-      m.put("otpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
-    }
-    else {
-      m.put("otpExpirationTime", user.getOtpExpirationTime()) ;
+        Map m = new HashMap() ;
+        int numberOfAttempts  = 0 ;
+        if (request.getSetpassword() ==1)
+        {
+          numberOfAttempts =  user.getResetPasswordOtpAttempts() ;
+          if (user.getResetPasswordOtp() == null ) numberOfAttempts =  3 ;
+          m.put("otpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
+          m.put("OTPSendingBanTime", user.getOTPSendingBanTime()) ;
+
+        }
+        else {
+          numberOfAttempts =   user.getAttempts() ;
+          if (user.getOtp() == null ) numberOfAttempts =  3 ;
+          m.put("otpExpirationTime", user.getOtpExpirationTime()) ;
+          m.put("OTPSendingBanTime", user.getOTPSendingBanTime()) ;
+        }
+
+        m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(true)
+                .message("OTP sent successfully")
+                .data(m)
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
-    ApiResponse<?> response = ApiResponse.builder()
-            .success(true)
-            .message("OTP sent successfully")
-            .data(m)
-            .timestamp(LocalDateTime.now())
-            .status(HttpStatus.OK.value())
-            .build();
-
-    return ResponseEntity.ok(response);
   }
 
 

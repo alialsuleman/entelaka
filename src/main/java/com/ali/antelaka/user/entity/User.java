@@ -49,16 +49,29 @@ public class User implements UserDetails {
 
 
   private boolean enabled  ;
+
+
   private String otp;
-  private LocalDateTime otpExpirationTime;
-
-
-  private LocalDateTime maxTimeToResetPassword;
   private String resetPasswordOtp;
-  private LocalDateTime resetPasswordOtpExpirationTime;
 
-  private Integer attempts ;
-  private LocalDateTime lastOtpSentAt ;
+
+  @Builder.Default()  private Integer resetPasswordOtpAttempts =0  ;
+  @Builder.Default()  private Integer numberOfresetPasswordOtpSending =0  ;
+
+  @Builder.Default()  private LocalDateTime otpExpirationTime= LocalDateTime.now().minusMinutes(10)   ;
+
+  @Builder.Default()  private LocalDateTime maxTimeToResetPassword= LocalDateTime.now().minusMinutes(10)   ;
+
+  @Builder.Default()  private LocalDateTime resetPasswordOtpExpirationTime = LocalDateTime.now().minusMinutes(10)   ;
+  @Builder.Default()  private LocalDateTime resetPasswordOTPSendingBanTime = LocalDateTime.now().minusMinutes(10)   ;
+
+
+  @Builder.Default()  private Integer numberOfOtpSending  =0 ;
+  @Builder.Default()  private Integer attempts =0  ;
+  @Builder.Default()  private LocalDateTime lastOtpSentAt = LocalDateTime.now().minusMinutes(10)    ;
+  @Builder.Default()  private LocalDateTime lastResetPasswordOTPSentAt = LocalDateTime.now().minusMinutes(10)  ;
+  @Builder.Default()  private LocalDateTime OTPSendingBanTime = LocalDateTime.now().minusMinutes(10)    ;
+
 
 
   @Override

@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -50,24 +52,48 @@ public class OtpService {
 
     public void sendotp(User user, boolean resetpassword ) {
 
-        LocalDateTime now = LocalDateTime.now();
 
-        if (user.getLastOtpSentAt() != null &&
-                Duration.between(user.getLastOtpSentAt(), now).toSeconds() < 60) {
-            throw new RuntimeException("You can request OTP only once per minute.");
-        }
-        user.setLastOtpSentAt(now);
-        String otp = generateOtp() ;
-        if (resetpassword) {
-            user.setResetPasswordOtp(otp );
-            user.setResetPasswordOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
-        }
-        else {
-            user.setOtp(otp);
-            user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
-        }
-        userRepository.save(user);
-        this.emailService.sendEmail(user.getEmail() , "OTP Verification", "Your OTP code is:"+otp);
+                LocalDateTime now = LocalDateTime.now();
+
+                String otp = generateOtp() ;
+                int manyAttempts =  0 ;
+                if (resetpassword ) {
+                    if ( now.isBefore(user.getResetPasswordOTPSendingBanTime())) {
+                        throw new RuntimeException();
+                    }
+                    user.setNumberOfresetPasswordOtpSending(user.getNumberOfresetPasswordOtpSending()+1);
+                    if (user.getNumberOfresetPasswordOtpSending()%3 == 0  ) {
+                        if (Duration.between(LocalDateTime.now() , user.getLastResetPasswordOTPSentAt()).getSeconds()/60  < 20 ) {
+                             manyAttempts = 59 ;
+                        }else user.setNumberOfresetPasswordOtpSending(0); ;
+                    }
+                    user.setResetPasswordOtp(otp );
+                    user.setResetPasswordOTPSendingBanTime(LocalDateTime.now().plusMinutes(1+manyAttempts)) ;
+                    user.setResetPasswordOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
+                    user.setLastResetPasswordOTPSentAt(LocalDateTime.now());
+                }
+                else {
+                    if ( now.isBefore(user.getOTPSendingBanTime())) {
+                        throw new RuntimeException();
+                    }
+                    user.setNumberOfOtpSending(user.getNumberOfOtpSending()+1);
+                    if (user.getNumberOfOtpSending()%3 ==0 ) {
+                        if (Duration.between(LocalDateTime.now() , user.getLastOtpSentAt()).getSeconds()/60  < 10 ) {
+                            manyAttempts = 59 ;
+                        }else user.setNumberOfOtpSending(0); ;
+
+                    }
+                    user.setOtp(otp);
+                    user.setOTPSendingBanTime(LocalDateTime.now().plusMinutes(1+manyAttempts));
+                    user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
+                    user.setLastOtpSentAt(LocalDateTime.now());
+                }
+                userRepository.save(user);
+
+                this.emailService.sendEmail(user.getEmail() , "OTP Verification", "Your OTP code is:"+otp);
+
+
+
     }
 
 
@@ -103,7 +129,7 @@ public class OtpService {
 
         if (isForRestPassword )
         {
-            if (user.getResetPasswordOtp() == null || user.getResetPasswordOtpExpirationTime() == null) {
+            if (user.getResetPasswordOtp() == null ) {
                 return
                         ApiResponse.<Void>builder()
                                 .success(false)
@@ -119,7 +145,7 @@ public class OtpService {
        else  {
 
 
-            if (user.getOtp() == null || user.getOtpExpirationTime() == null) {
+            if (user.getOtp() == null ) {
                 return
                         ApiResponse.<Void>builder()
                                 .success(false)
@@ -134,12 +160,28 @@ public class OtpService {
         }
 
         if (isValid) {
-            user.setResetPasswordOtp(null);
-            user.setResetPasswordOtpExpirationTime(null);
-            user.setOtpExpirationTime(null);
-            user.setOtp(null);
             user.setEnabled(true );
+
+
+            user.setOtp(null);
+            user.setResetPasswordOtp(null);
+
+
+            user.setResetPasswordOtpExpirationTime(LocalDateTime.now().minusMinutes(10) );
+            user.setOtpExpirationTime(LocalDateTime.now().minusMinutes(10) );
+
+
             user.setAttempts(0);
+            user.setResetPasswordOtpAttempts(0) ;
+
+            user.setNumberOfOtpSending(0);
+            user.setNumberOfresetPasswordOtpSending(0);
+
+            user.setResetPasswordOTPSendingBanTime(LocalDateTime.now().minusMinutes(10) );
+            user.setOTPSendingBanTime(LocalDateTime.now().minusMinutes(10) );
+
+            user.setLastOtpSentAt(LocalDateTime.now().minusMinutes(10) );
+            user.setLastResetPasswordOTPSentAt(LocalDateTime.now().minusMinutes(10) );
 
             if (isForRestPassword)
                 user.setMaxTimeToResetPassword(
@@ -169,34 +211,53 @@ public class OtpService {
                             .build() ;
 
         } else {
-            if (user.getAttempts() == null )
+            int numberOfAttempts =0 ;
+
+            if (isForRestPassword)
             {
-                user.setAttempts(0) ;
-            };
-            user.setAttempts(user.getAttempts() +1) ;
+                user.setResetPasswordOtpAttempts(user.getResetPasswordOtpAttempts()+1);
+                numberOfAttempts =  user.getResetPasswordOtpAttempts() ;
+            }
+
+            else{
+                user.setAttempts(user.getAttempts()+1);
+                numberOfAttempts =  user.getAttempts() ;
+            }
+
             this.userRepository.save(user) ;
-            if (user.getAttempts() >=3 )
+
+            Map<String,Integer> m = new HashMap<>( ) ;
+            m.put("numberOfAttempts" , numberOfAttempts) ;
+            m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
+
+            if (numberOfAttempts >=3 )
             {
                 user.setResetPasswordOtp(null);
-                user.setResetPasswordOtpExpirationTime(null);
-                user.setOtpExpirationTime(null);
                 user.setOtp(null);
+
+                user.setResetPasswordOtpExpirationTime(LocalDateTime.now());
+                user.setOtpExpirationTime(LocalDateTime.now());
+
                 user.setAttempts(0);
+                user.setResetPasswordOtpAttempts(0);
 
                 this.userRepository.save(user) ;
+
                 return
-                        ApiResponse.<Void>builder()
+                        ApiResponse.<Map>builder()
                                 .success(false)
                                 .message("You have exceeded the allowed number of attempts. Please resend the code again.")
+                                .data(m)
                                 .status(HttpStatus.UNAUTHORIZED.value())
                                 .build();
             }
             else {
 
                 return
-                        ApiResponse.<Void>builder()
+                        ApiResponse.<Map>builder()
                                 .success(false)
                                 .message("Invalid or expired OTP")
+                                .data(m)
                                 .status(HttpStatus.UNAUTHORIZED.value())
                                 .build();
             }
