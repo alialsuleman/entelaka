@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             m.put("accessToken" , null);
             m.put("refreshToken" , null);
             m.put("Verified" , false);
-            sendErrorResponse(response, "You must confirm your email first.", HttpStatus.UNAUTHORIZED , m);
+            sendSuccussResponse(response, "You must confirm your email first.", HttpStatus.OK , m);
             return;
            }
 
@@ -138,4 +138,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     response.setContentType("application/json");
     response.getWriter().write(jsonResponse);
   }
+
+  private void sendSuccussResponse(HttpServletResponse response, String message, HttpStatus status , Map data  ) throws IOException {
+
+
+        response.setStatus(200);
+
+        ApiResponse<Map<?,?>> apiResponse = new ApiResponse<Map<?,?>>(
+                true,
+                message,
+                data,
+                List.of(message),
+                LocalDateTime.now(),
+                HttpStatus.OK.value()
+        );
+
+
+        System.out.println("123");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        String jsonResponse = mapper.writeValueAsString(apiResponse);
+
+        response.setContentType("application/json");
+        response.getWriter().write(jsonResponse);
+    }
+
 }
+
+

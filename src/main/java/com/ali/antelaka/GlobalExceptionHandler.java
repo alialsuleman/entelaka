@@ -49,20 +49,35 @@ public class GlobalExceptionHandler {
         System.out.println("hello1");
         System.out.println(ex.getMessage()) ;
         Map m = new HashMap<String, String>( ) ;
+
+        ApiResponse<?> response ;
         if (ex.getMessage().equals("You must confirm your email first."))
         {
             m.put("accessToken" , null);
             m.put("refreshToken" , null);
             m.put("verified" , false);
+            response = new ApiResponse<>(
+                    true,
+                    ex.getMessage(),
+                    m,
+                    List.of(ex.getLocalizedMessage()),
+                    LocalDateTime.now(),
+                    HttpStatus.OK.value()
+            );
+            return ResponseEntity.status(200).body(response);
+
         }
-        ApiResponse<?> response = new ApiResponse<>(
-                false,
-                ex.getMessage(),
-                m,
-                List.of(ex.getLocalizedMessage()),
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value()
-        );
+        else {
+             response = new ApiResponse<>(
+                    false,
+                    ex.getMessage(),
+                    m,
+                    List.of(ex.getLocalizedMessage()),
+                    LocalDateTime.now(),
+                    HttpStatus.BAD_REQUEST.value()
+            );
+        }
+
         return ResponseEntity.status(400).body(response);
     }
 

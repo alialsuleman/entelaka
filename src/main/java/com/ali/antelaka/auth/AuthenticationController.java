@@ -167,8 +167,8 @@ public class AuthenticationController {
         if (request.getSetpassword() ==1)
         {
           numberOfAttempts =  user.getResetPasswordOtpAttempts() ;
-          m.put("ResetPasswordOtpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
-          m.put("ResetPasswordOtpSendingBanTime", user.getResetPasswordOTPSendingBanTime()) ;
+          m.put("otpExpirationTime", user.getResetPasswordOtpExpirationTime()) ;
+          m.put("OTPSendingBanTime", user.getResetPasswordOTPSendingBanTime()) ;
 
         }
         else {
