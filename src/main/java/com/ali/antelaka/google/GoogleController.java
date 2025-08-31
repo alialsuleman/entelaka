@@ -45,7 +45,7 @@ public class GoogleController {
 
                 return ResponseEntity.badRequest().body( ApiResponse.<Void>builder()
                         .success(false)
-                        .message("login successfully")
+                        .message("login failed")
                         .status(HttpStatus.BAD_REQUEST.value())
                         .build());
             }
@@ -69,7 +69,7 @@ public class GoogleController {
                             .success(true)
                             .data(authenticationResponse)
                             .message("login successfully")
-                            .status(HttpStatus.BAD_REQUEST.value())
+                            .status(HttpStatus.OK.value())
                             .build()
 
 
