@@ -188,6 +188,8 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }catch (Exception ex)
     {
+
+        System.out.println(ex.getMessage());
         Map m = new HashMap() ;
         int numberOfAttempts  = 0 ;
         if (request.getSetpassword() ==1)
@@ -233,7 +235,9 @@ public class AuthenticationController {
   // testing section
   @GetMapping("/alluser")
   public ResponseEntity<Collection<User>> alluser() {
-      return ResponseEntity.ok().body(userRepository.findAll()) ;
+      var x =  userRepository.findAll() ;
+      System.out.println(x.get(0).getFirstname());
+      return ResponseEntity.ok().body(x) ;
   }
   @GetMapping("/alltoken")
   public ResponseEntity<Collection<Token>> alltoken() {
@@ -247,7 +251,7 @@ public class AuthenticationController {
 
   @DeleteMapping("/deleteall")
   public ResponseEntity<String> deleteall() {
-    this.tokenRepository.deleteAll();
+    //this.tokenRepository.deleteAll();
     this.userRepository.deleteAll();
 
     return ResponseEntity.ok().body("done !") ;

@@ -1,7 +1,9 @@
 package com.ali.antelaka.user.entity;
 
+import com.ali.antelaka.follow.Follow;
+import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.post.entity.Post;
 import com.ali.antelaka.token.Token;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -14,11 +16,11 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "tokens")
 @Entity
 @Table(name = "_user")
 public class User implements UserDetails {
@@ -26,8 +28,15 @@ public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
+
   private String firstname;
   private String lastname;
+
+  @Column(name = "image_path")
+  private String imagePath;
+
+
+
 
   @Email(message = "Email must be valid")
   @NotBlank(message = "Email required")
@@ -40,12 +49,22 @@ public class User implements UserDetails {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  @OneToMany(mappedBy = "user")
-  @JsonIgnore
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<PageEntity> pages;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<Post> posts;
+
+  @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL ,  orphanRemoval = true, fetch = FetchType.LAZY)
   private List<Token> tokens;
 
 
+  @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+  private List<Follow> following;
 
+  @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+  private List<Follow> followers;
 
 
   private boolean enabled  ;

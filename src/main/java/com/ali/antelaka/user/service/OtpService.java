@@ -6,6 +6,10 @@ import com.ali.antelaka.auth.AuthenticationResponse;
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.mail.EmailService;
+
+import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.page.entity.PageType;
+import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.CheckOtpRequest;
@@ -33,6 +37,10 @@ public class OtpService {
 
     @Autowired
     private AuthenticationService authenticationService ;
+
+
+    @Autowired
+    private PageRepository pageRepository ;
 
     @Autowired
     private JwtService  jwtService ;
@@ -183,16 +191,31 @@ public class OtpService {
             user.setLastOtpSentAt(LocalDateTime.now().minusMinutes(10) );
             user.setLastResetPasswordOTPSentAt(LocalDateTime.now().minusMinutes(10) );
 
-            if (isForRestPassword)
+            if (isForRestPassword) {
                 user.setMaxTimeToResetPassword(
                         LocalDateTime.now().plusMinutes(jwtResetPasswordExpiration/60000));
+            }
+
+
 
 
             String token = this.jwtService.generateToken(user , isForRestPassword) ;
 
             this.authenticationService.revokeAllUserTokens(user);
             this.authenticationService.saveUserToken(user, token);
-            userRepository.save(user);
+            var savedUser = userRepository.save(user);
+            if (!isForRestPassword) {
+                PageEntity publicUserPage = PageEntity.builder()
+                        .user(savedUser)
+                        .pageType(PageType.PUBLIC.name())
+                        .description("Hi there")
+                        .build();
+                this.pageRepository.save(publicUserPage);
+            }
+
+
+
+
 
             AuthenticationResponse res  ;
             if (isForRestPassword) res  = new AuthenticationResponse(token , null , user.isEnabled() );

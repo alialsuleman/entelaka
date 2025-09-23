@@ -2,6 +2,7 @@ package com.ali.antelaka;
 
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.auth.RegisterRequest;
+import com.ali.antelaka.page.entity.PageType;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,11 @@ public class SecurityApplication {
 //			System.out.println(auth.equals(new SimpleGrantedAuthority("admin:create")));
 //		}
 		SpringApplication.run(SecurityApplication.class, args);
+
 	}
 
+
+	/*
 	@Bean
 	public CommandLineRunner commandLineRunner(
 			AuthenticationService service
@@ -70,11 +74,15 @@ public class SecurityApplication {
 					.email("user@mail.com")
 					.password("password")
 					.role(USER)
+
 					.build();
+
 			service.register(user) ;
 		//	System.out.println("USer token: " + service.register(user).getAccessToken());
 			System.out.println("USer roles: " + user.getRole());
 
 		};
 	}
+
+	 */
 }

@@ -1,0 +1,63 @@
+package com.ali.antelaka.follow;
+
+import com.ali.antelaka.user.UserRepository;
+import com.ali.antelaka.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class FollowService {
+
+    private final FollowRepository followRepository;
+    private final UserRepository userRepository;
+
+    public Page<User> getFollowers(User user, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Follow> follows = followRepository.findByFollowing(user, pageable);
+
+        return follows.map(Follow::getFollower); // نرجع فقط المستخدمين
+    }
+
+    public Page<User> getFollowing(User user, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Follow> follows = followRepository.findByFollower(user, pageable);
+        return follows.map(Follow::getFollowing); // نرجع فقط المستخدمين
+
+    }
+
+    public Follow followUser(User follower, Integer followingId) {
+
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new RuntimeException("Following not found"));
+
+        if (follower.getId().equals(following.getId())) {
+            throw new RuntimeException("User cannot follow themselves");
+        }
+        var x = this.followRepository.findByFollowerAndFollowing(follower , following).orElseGet(()->{
+            Follow follow = Follow.builder()
+                    .follower(follower)
+                    .following(following)
+                    .build();
+            this.followRepository.save(follow);
+            System.out.println("added");
+            return follow ;
+        }) ;
+
+
+
+        return null ;
+    }
+
+    public void unfollowUser(User user, Integer followingId) {
+
+        this.followRepository.deleteAll(this.followRepository.findByFollower(user)) ;
+    }
+}

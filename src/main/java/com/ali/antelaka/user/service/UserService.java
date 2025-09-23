@@ -3,7 +3,10 @@ package com.ali.antelaka.user.service;
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.google.GoogleUser;
-import com.ali.antelaka.token.TokenRepository;
+
+import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.page.entity.PageType;
+import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
@@ -12,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,9 @@ public class UserService {
     @Autowired
     private AuthenticationService authenticationService ;
 
+    @Autowired
+    private PageRepository pageRepository ;
+
     public User findOrCreateUser (GoogleUser googleUser)
     {
         var user =  this.repository.findByEmail(googleUser.getEmail())
@@ -37,11 +42,20 @@ public class UserService {
                         .firstname(extractFirstName(googleUser.getName()))
                         .lastname(extractLastName(googleUser.getName()))
                         .email(googleUser.getEmail())
+                        .imagePath(googleUser.getPicture())
                         .password(null)
                         .role(Role.USER)
                         .enabled(true)
                         .build();
             var savedUser = repository.save(newUser);
+
+            PageEntity publicUserPage = PageEntity.builder()
+                    .user(savedUser)
+                    .pageType(PageType.PUBLIC.name())
+                    .description("Hi there")
+                    .build();
+            this.pageRepository.save(publicUserPage);
+
 
             return savedUser;
         });

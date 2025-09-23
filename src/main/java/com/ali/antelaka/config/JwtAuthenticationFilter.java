@@ -52,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       if (
               request.getServletPath().contains("/auth") ||
-              request.getServletPath().contains("/email/send"))
+                      request.getServletPath().contains("/uploads") ||
+                      request.getServletPath().contains("/email/send"))
       {
         filterChain.doFilter(request, response);
         return;

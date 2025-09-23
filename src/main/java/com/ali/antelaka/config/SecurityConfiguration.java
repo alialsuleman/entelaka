@@ -51,8 +51,11 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req.requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
+                                .requestMatchers("/follow/**").permitAll()
                                 .requestMatchers("/oauth2/authorization/google").permitAll()
                                 .requestMatchers("/email/**").permitAll()
+                                .requestMatchers("/posts/**").permitAll()
                                 .requestMatchers("/swagger-ui/index.html").permitAll()
                                 .anyRequest().authenticated()
                 )
