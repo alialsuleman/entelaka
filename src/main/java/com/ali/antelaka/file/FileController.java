@@ -72,14 +72,25 @@ public class FileController {
 
     // حذف صورة
     @DeleteMapping("/deletepostimage/{id}")
-    public ResponseEntity<String> deleteFile(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse> deleteFile(@PathVariable Integer id) {
         System.out.println(id);
         boolean deleted = fileStorageService.deleteFile(id);
 
+        ApiResponse response = ApiResponse.builder()
+                .success(true)
+                .message("created successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data (null)
+                .build();
+
         if (deleted) {
-            return ResponseEntity.ok("Deleted successfully");
+            response.setMessage("Deleted successfully");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body("File not found");
+            response.setMessage("File not found");
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

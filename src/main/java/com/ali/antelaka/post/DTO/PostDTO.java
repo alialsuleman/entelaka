@@ -30,12 +30,24 @@ public class PostDTO {
     private LocalDateTime updatedAt;
 
     private Integer userId;
+    private String username ;
+
+    private String userImagePath ;
     private Integer pageId;
 
     private List<PostImage> postImages;
 
 
     public PostDTO(Post post) {
+        String name = "";
+        if ( post.getUser().getFirstname()  != null )
+        {
+            name+= post.getUser().getFirstname() ;
+        }
+        if ( post.getUser().getLastname()!=  null)
+        {
+            name += " " +  post.getUser().getLastname() ;
+        }
         this.id = post.getId();
         this.text = post.getText();
         this.tag = post.getTag();
@@ -44,6 +56,8 @@ public class PostDTO {
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.userId = post.getUser() != null ? post.getUser().getId() : null;
+        this.username = name!= null ?name  : null ;
+        this.userImagePath =  post.getUser().getImagePath() != null ?post.getUser().getImagePath()  : null ;
         this.pageId = post.getPageEntity() != null ? post.getPageEntity().getId() : null;
         this.postImages =  post.getPostImages()!= null ?  post.getPostImages() : new ArrayList();
     }

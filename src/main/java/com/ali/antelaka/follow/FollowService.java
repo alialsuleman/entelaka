@@ -2,6 +2,7 @@ package com.ali.antelaka.follow;
 
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,8 +57,12 @@ public class FollowService {
         return null ;
     }
 
-    public void unfollowUser(User user, Integer followingId) {
 
-        this.followRepository.deleteAll(this.followRepository.findByFollower(user)) ;
+    @Transactional
+    public void unfollowUser(User user, Integer followingId) {
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        followRepository.deleteByFollowerAndFollowing(user, following);
     }
 }

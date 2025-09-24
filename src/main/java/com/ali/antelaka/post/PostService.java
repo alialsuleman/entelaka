@@ -2,6 +2,7 @@ package com.ali.antelaka.post;
 
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.post.DTO.PostDTO;
 import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.LikeEntity;
 import com.ali.antelaka.post.entity.Post;
@@ -172,66 +173,59 @@ public class PostService {
 
         if (updateRequest.getPostImageIds() != null) {
             List<PostImage> newImages = new ArrayList<>();
-            List <Integer> postImageIds = new ArrayList<>();
-            post.getPostImages().forEach(img -> {
-                img.setPost(null);
-                this.postImageRepository.save(img);
-                postImageIds.add(img.getId()) ;
-            });
-
-            updateRequest.getPostImageIds().forEach(id -> {
-                var img = this.postImageRepository.findById(id)
+            for (Integer id : updateRequest.getPostImageIds()) {
+                var img = postImageRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Image not found"));
-                if (img.getPost() != null) {
+
+                if (img.getPost() != null && !img.getPost().getId().equals(post.getId())) {
                     throw new RuntimeException("Image already used in another post");
                 }
+
                 img.setPost(post);
                 newImages.add(img);
-                this.postImageRepository.save(img);
-            });
-
-            postImageIds.forEach(id -> {
-                var img = this.postImageRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Image not found"));
-                if (img.getPost() == null) {
-                    this.postImageRepository.delete(img);
-                }
-            });
-
-            post.setPostImages(newImages);
+            }
+            post.getPostImages().clear();
+            post.getPostImages().addAll(newImages);
         }
 
         return this.postRepository.save(post);
     }
 
 
-    public List<Post> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic) {
+    public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
         }
+
+        List<Post> posts;
         if (onlyPublic) {
             System.out.println("get old public post");
-            return postRepository.findOlderPublicPosts(x, pageable);
+            posts= postRepository.findOlderPublicPosts(x, pageable);
         }
         else {
             System.out.println("get old not public post");
-            return postRepository.findOlderPosts(userId, x, pageable);
+            posts =   postRepository.findOlderPosts(userId, x, pageable);
         }
+        return posts.stream().map(PostDTO::new).toList();
     }
 
-    public List<Post> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic) {
+    public List<PostDTO> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
         }
+
+        List<Post> posts;
+
         if (onlyPublic) {
-            return postRepository.findNewerPublicPosts(x, pageable);
+            posts = postRepository.findNewerPublicPosts(x, pageable);
         }
         else  {
-            return postRepository.findNewerPosts(userId, x, pageable);
-
+            posts = postRepository.findNewerPosts(userId, x, pageable);
         }
+        return posts.stream().map(PostDTO::new).toList();
+
     }
 
 }

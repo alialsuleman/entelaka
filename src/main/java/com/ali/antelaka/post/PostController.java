@@ -208,32 +208,50 @@ public class PostController {
 
 
     @GetMapping("/older")
-    public ResponseEntity<List<Post>> getOlderPosts(
+    public ResponseEntity<ApiResponse> getOlderPosts(
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit )
     {
         boolean onlyPublic = true ;
-        List<Post> posts = postService.getOlderPosts(userId, date, limit, onlyPublic);
-        return ResponseEntity.ok(posts);
+        List<PostDTO> posts = postService.getOlderPosts(userId, date, limit, onlyPublic);
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Post created successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (posts)
+                .build();
+
+        return ResponseEntity.ok(res);
     }
 
 
     @GetMapping("/newer")
-    public ResponseEntity<List<Post>> getNewerPosts(
+    public ResponseEntity<ApiResponse> getNewerPosts(
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit )
     {
         boolean onlyPublic = true ;
-        List<Post> posts = postService.getNewerPosts(userId, date, limit, onlyPublic);
-        return ResponseEntity.ok(posts);
+        List<PostDTO> posts = postService.getNewerPosts(userId, date, limit, onlyPublic);
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Post created successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (posts)
+                .build();
+
+        return ResponseEntity.ok(res);
     }
 
 
     @GetMapping("/myolder")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<List<Post>> getMYOlderPosts(
+    public ResponseEntity<ApiResponse> getMYOlderPosts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit,
             Principal connectedUser
@@ -243,14 +261,25 @@ public class PostController {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         boolean onlyPublic = false ;
-        List<Post> posts = postService.getOlderPosts(user.getId(), date, limit, onlyPublic);
-        return ResponseEntity.ok(posts);
+        List<PostDTO> posts = postService.getOlderPosts(user.getId(), date, limit, onlyPublic);
+
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Post created successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (posts)
+                .build();
+
+
+        return ResponseEntity.ok(res);
     }
 
 
     @GetMapping("/mynewer")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<List<Post>> getMyNewerPosts(
+    public ResponseEntity<ApiResponse> getMyNewerPosts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit,
             Principal connectedUser
@@ -259,8 +288,20 @@ public class PostController {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         boolean onlyPublic = false ;
-        List<Post> posts = postService.getNewerPosts(user.getId(), date, limit, onlyPublic);
-        return ResponseEntity.ok(posts);
+        List<PostDTO> posts = postService.getNewerPosts(user.getId(), date, limit, onlyPublic);
+
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Post created successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (posts)
+                .build();
+
+
+
+        return ResponseEntity.ok(res);
     }
 
 
