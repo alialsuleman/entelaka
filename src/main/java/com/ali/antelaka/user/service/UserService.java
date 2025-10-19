@@ -50,6 +50,7 @@ public class UserService {
             var savedUser = repository.save(newUser);
 
             PageEntity publicUserPage = PageEntity.builder()
+                    .id(savedUser.getId())
                     .user(savedUser)
                     .pageType(PageType.PUBLIC.name())
                     .description("Hi there")

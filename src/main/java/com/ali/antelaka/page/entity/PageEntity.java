@@ -18,7 +18,6 @@ import java.util.List;
 @Table
 public class PageEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String tag ;

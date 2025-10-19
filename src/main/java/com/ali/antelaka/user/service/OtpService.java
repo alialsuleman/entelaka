@@ -206,6 +206,7 @@ public class OtpService {
             var savedUser = userRepository.save(user);
             if (!isForRestPassword) {
                 PageEntity publicUserPage = PageEntity.builder()
+                        .id(savedUser.getId())
                         .user(savedUser)
                         .pageType(PageType.PUBLIC.name())
                         .description("Hi there")
