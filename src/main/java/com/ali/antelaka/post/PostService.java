@@ -3,14 +3,8 @@ package com.ali.antelaka.post;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.post.DTO.PostDTO;
-import com.ali.antelaka.post.entity.Comment;
-import com.ali.antelaka.post.entity.LikeEntity;
-import com.ali.antelaka.post.entity.Post;
-import com.ali.antelaka.post.entity.PostImage;
-import com.ali.antelaka.post.repository.CommentRepository;
-import com.ali.antelaka.post.repository.LikeRepository;
-import com.ali.antelaka.post.repository.PostImageRepository;
-import com.ali.antelaka.post.repository.PostRepository;
+import com.ali.antelaka.post.entity.*;
+import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.user.entity.User;
@@ -44,7 +38,8 @@ public class PostService {
     @Autowired
     private CommentRepository commentRepository ;
 
-
+    @Autowired
+    private SaveRepository saveRepository ;
 
     public Optional<Post> getPostById(Integer postId)
     {
@@ -112,6 +107,30 @@ public class PostService {
             this.postRepository.save(post) ;
         }
         return true ;
+    }
+
+
+    public int flipSave  (User user,Integer postId  )
+    {
+        var o_post =  this.postRepository.findById(postId) ;
+        if (!o_post.isPresent()) return 0 ;
+
+        var is_added  =  this.saveRepository.findByUserIdAndPostId(user.getId() , postId) ;
+        var post= o_post.get();
+
+        if (is_added.isPresent())
+        {
+            this.saveRepository.delete(is_added.get());
+            return 1 ;
+
+        }else {
+            var saveEntity = SaveEntity.builder()
+                    .post(post)
+                    .user(user)
+                    .build() ;
+            this.saveRepository.save(saveEntity) ;
+         }
+        return 2 ;
     }
 
     public boolean createComment  (User user, Integer postId  , CreateCommentRequest  createCommentRequest)
@@ -192,7 +211,7 @@ public class PostService {
     }
 
 
-    public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic) {
+    public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic , User user) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
@@ -207,10 +226,12 @@ public class PostService {
             System.out.println("get old not public post");
             posts =   postRepository.findOlderPosts(userId, x, pageable);
         }
-        return posts.stream().map(PostDTO::new).toList();
+        return posts.stream()
+                .map(post -> new PostDTO(post, user, likeRepository , saveRepository))
+                .toList();
     }
 
-    public List<PostDTO> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic) {
+    public List<PostDTO> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic , User  user) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
@@ -224,7 +245,9 @@ public class PostService {
         else  {
             posts = postRepository.findNewerPosts(userId, x, pageable);
         }
-        return posts.stream().map(PostDTO::new).toList();
+        return posts.stream()
+                .map(post -> new PostDTO(post, user, likeRepository , saveRepository))
+                .toList();
 
     }
 
