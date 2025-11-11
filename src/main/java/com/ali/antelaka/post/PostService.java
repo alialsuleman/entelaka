@@ -1,7 +1,9 @@
 package com.ali.antelaka.post;
 
+import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.post.DTO.CommentDTO;
 import com.ali.antelaka.post.DTO.PostDTO;
 import com.ali.antelaka.post.entity.*;
 import com.ali.antelaka.post.repository.*;
@@ -40,6 +42,9 @@ public class PostService {
 
     @Autowired
     private SaveRepository saveRepository ;
+
+    @Autowired
+    private FollowRepository followRepository ;
 
     public Optional<Post> getPostById(Integer postId)
     {
@@ -211,7 +216,7 @@ public class PostService {
     }
 
 
-    public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic , User user) {
+    public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic , User user  , String tag) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
@@ -220,18 +225,18 @@ public class PostService {
         List<Post> posts;
         if (onlyPublic) {
             System.out.println("get old public post");
-            posts= postRepository.findOlderPublicPosts(x, pageable);
+            posts= postRepository.findOlderPublicPosts(x,tag, pageable);
         }
         else {
             System.out.println("get old not public post");
-            posts =   postRepository.findOlderPosts(userId, x, pageable);
+            posts =   postRepository.findOlderPosts(userId, x,tag , pageable );
         }
         return posts.stream()
-                .map(post -> new PostDTO(post, user, likeRepository , saveRepository))
+                .map(post -> new PostDTO(post, user, likeRepository , saveRepository , followRepository ))
                 .toList();
     }
 
-    public List<PostDTO> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic , User  user) {
+    public List<PostDTO> getNewerPosts(Integer userId, LocalDateTime x, int limit, boolean onlyPublic , User  user  , String tag) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
             x = LocalDateTime.now();
@@ -240,15 +245,33 @@ public class PostService {
         List<Post> posts;
 
         if (onlyPublic) {
-            posts = postRepository.findNewerPublicPosts(x, pageable);
+            posts = postRepository.findNewerPublicPosts(x, tag,  pageable );
         }
         else  {
-            posts = postRepository.findNewerPosts(userId, x, pageable);
+            posts = postRepository.findNewerPosts(userId, x, tag , pageable);
         }
         return posts.stream()
-                .map(post -> new PostDTO(post, user, likeRepository , saveRepository))
+                .map(post -> new PostDTO(post, user, likeRepository , saveRepository  , followRepository))
                 .toList();
 
     }
 
+    public Page<CommentDTO> getCommentsByPostIdWithUserInfo(Integer postId, Pageable pageable) {
+        return commentRepository.findByPostId(postId, pageable)
+                .map(comment -> CommentDTO.builder()
+                        .id(comment.getId())
+                        .text(comment.getText())
+                        .createdAt(comment.getCreatedAt())
+                        .updatedAt(comment.getUpdatedAt())
+                        .userName(comment.getUser().getFirstname() + comment.getUser().getLastname())
+                        .userId(comment.getUser().getId())
+                        .userAvatar(comment.getUser().getImagePath())
+                        .build());
+    }
+
+
+
+
 }
+
+

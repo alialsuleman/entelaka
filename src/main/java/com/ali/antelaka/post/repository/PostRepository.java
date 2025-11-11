@@ -14,39 +14,106 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
-    @Query("SELECT p FROM Post p " +
-            "WHERE p.isPublic = true " +
-            "AND p.updatedAt < :x " +
-            "ORDER BY p.updatedAt DESC")
-    List<Post> findOlderPublicPosts(@Param("x") LocalDateTime x, Pageable pageable);
 
-    @Query("SELECT p FROM Post p " +
-            "WHERE p.isPublic = true " +
-            "AND p.updatedAt > :x " +
-            "ORDER BY p.updatedAt ASC")
-    List<Post> findNewerPublicPosts(@Param("x") LocalDateTime x, Pageable pageable);
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.isPublic = true
+      AND p.updatedAt < :x
+      AND (:tag IS NULL OR p.tag = :tag)
+    ORDER BY p.updatedAt DESC
+    """)
+    List<Post> findOlderPublicPosts(
+            @Param("x") LocalDateTime x,
+            @Param("tag") String tag,
+            Pageable pageable
+    );
 
-    @Query("SELECT p FROM Post p " +
-            "JOIN p.user u " +
-            "JOIN Follow f ON f.following = u " +
-            "WHERE f.follower.id = :followerId " +
-            "AND p.updatedAt < :x " +
-            "ORDER BY p.updatedAt DESC")
+
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.isPublic = true
+      AND p.updatedAt > :x
+      AND (:tag IS NULL OR p.tag = :tag)
+    ORDER BY p.updatedAt ASC
+    """)
+    List<Post> findNewerPublicPosts(
+            @Param("x") LocalDateTime x,
+            @Param("tag") String tag,
+            Pageable pageable
+    );
+
+
+    @Query("""
+    SELECT p FROM Post p
+    JOIN p.user u
+    JOIN Follow f ON f.following = u
+    WHERE f.follower.id = :followerId
+      AND p.updatedAt < :x
+      AND (:tag IS NULL OR p.tag = :tag)
+    ORDER BY p.updatedAt DESC
+    """)
     List<Post> findOlderPosts(
             @Param("followerId") Integer followerId,
             @Param("x") LocalDateTime x,
-            Pageable pageable);
+            @Param("tag") String tag,
+            Pageable pageable
+    );
 
-
-    @Query("SELECT p FROM Post p " +
-            "JOIN p.user u " +
-            "JOIN Follow f ON f.following = u " +
-            "WHERE f.follower.id = :followerId " +
-            "AND p.updatedAt > :x " +
-            "ORDER BY p.updatedAt ASC")
+    @Query("""
+    SELECT p FROM Post p
+    JOIN p.user u
+    JOIN Follow f ON f.following = u
+    WHERE f.follower.id = :followerId
+      AND p.updatedAt > :x
+      AND (:tag IS NULL OR p.tag = :tag)
+    ORDER BY p.updatedAt ASC
+    """)
     List<Post> findNewerPosts(
             @Param("followerId") Integer followerId,
-            @Param("x") LocalDateTime x, Pageable pageable);
+            @Param("x") LocalDateTime x,
+            @Param("tag") String tag,
+            Pageable pageable
+    );
+
+
+
+
+
+
+
+//    @Query("SELECT p FROM Post p " +
+//            "WHERE p.isPublic = true " +
+//            "AND p.updatedAt < :x " +
+//            "ORDER BY p.updatedAt DESC")
+//    List<Post> findOlderPublicPosts(@Param("x") LocalDateTime x, Pageable pageable);
+//
+//    @Query("SELECT p FROM Post p " +
+//            "WHERE p.isPublic = true " +
+//            "AND p.updatedAt > :x " +
+//            "ORDER BY p.updatedAt ASC")
+//    List<Post> findNewerPublicPosts(@Param("x") LocalDateTime x, Pageable pageable);
+//
+//    @Query("SELECT p FROM Post p " +
+//            "JOIN p.user u " +
+//            "JOIN Follow f ON f.following = u " +
+//            "WHERE f.follower.id = :followerId " +
+//            "AND p.updatedAt < :x " +
+//            "ORDER BY p.updatedAt DESC")
+//    List<Post> findOlderPosts(
+//            @Param("followerId") Integer followerId,
+//            @Param("x") LocalDateTime x,
+//            Pageable pageable);
+//
+//
+//    @Query("SELECT p FROM Post p " +
+//            "JOIN p.user u " +
+//            "JOIN Follow f ON f.following = u " +
+//            "WHERE f.follower.id = :followerId " +
+//            "AND p.updatedAt > :x " +
+//            "ORDER BY p.updatedAt ASC")
+//    List<Post> findNewerPosts(
+//            @Param("followerId") Integer followerId,
+//            @Param("x") LocalDateTime x, Pageable pageable);
 
 
 //    @Query("SELECT p FROM Post p " +

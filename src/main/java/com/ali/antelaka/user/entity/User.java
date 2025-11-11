@@ -3,6 +3,7 @@ package com.ali.antelaka.user.entity;
 import com.ali.antelaka.follow.Follow;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.post.entity.Post;
+import com.ali.antelaka.post.entity.SaveEntity;
 import com.ali.antelaka.token.Token;
 import jakarta.persistence.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -66,6 +68,10 @@ public class User implements UserDetails {
   @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
   private List<Follow> followers;
 
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @JsonIgnore
+  private List<SaveEntity> saves;
 
   private boolean enabled  ;
 

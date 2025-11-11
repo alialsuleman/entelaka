@@ -2,8 +2,12 @@ package com.ali.antelaka.post;
 
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.follow.FollowRepository;
+import com.ali.antelaka.post.DTO.CommentDTO;
 import com.ali.antelaka.post.DTO.PostDTO;
+import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.Post;
+import com.ali.antelaka.post.repository.CommentRepository;
 import com.ali.antelaka.post.repository.LikeRepository;
 import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.post.repository.SaveRepository;
@@ -11,6 +15,10 @@ import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +48,12 @@ public class PostController {
     @Autowired
     private SaveRepository saveRepository ;
 
+    @Autowired
+    private FollowRepository followRepository ;
+
+
+    @Autowired
+    private CommentRepository commentRepository ;
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse> getPostById(
             @PathVariable Integer postId
@@ -50,7 +64,7 @@ public class PostController {
         var post = this.postService.getPostById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        PostDTO postDTO = new PostDTO(post ,  null ,null , null );
+        PostDTO postDTO = new PostDTO(post ,  null ,null , null , null );
 
         Map<String, Object> data = new HashMap<>();
         data.put("post", postDTO);
@@ -80,7 +94,7 @@ public class PostController {
         System.out.println(user.toString());
         System.out.println("any");
         Post createdPost = this.postService.createPost(user, pageId , createPostRequest);
-        PostDTO postDTO =  new PostDTO(createdPost , user , likeRepository , saveRepository) ;
+        PostDTO postDTO =  new PostDTO(createdPost , user , likeRepository , saveRepository , followRepository ) ;
         Map m =  new HashMap( ) ;
         m.put("newPost" , postDTO) ;
         ApiResponse res =  ApiResponse.builder()
@@ -133,7 +147,7 @@ public class PostController {
     {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
         Post updatedPost = this.postService.updatePost(user, postId, updateRequest);
-        PostDTO postDTO = new PostDTO(updatedPost  , user , likeRepository , saveRepository );
+        PostDTO postDTO = new PostDTO(updatedPost  , user , likeRepository , saveRepository , followRepository);
 
         Map<String, Object> data = new HashMap<>();
         data.put("updatedPost", postDTO);
@@ -251,6 +265,7 @@ public class PostController {
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit ,
+            @RequestParam(required = false) String tag,
             Principal connectedUser )
     {
 
@@ -260,7 +275,7 @@ public class PostController {
         if(user != null)
         System.out.println(user.getFirstname());
         boolean onlyPublic = true ;
-        List<PostDTO> posts = postService.getOlderPosts(userId, date, limit, onlyPublic , user);
+        List<PostDTO> posts = postService.getOlderPosts(userId, date, limit, onlyPublic , user , tag);
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -279,6 +294,7 @@ public class PostController {
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit  ,
+            @RequestParam(required = false) String tag,
             Principal connectedUser )
     {
         User user  = null ;
@@ -286,7 +302,7 @@ public class PostController {
         if(user != null) System.out.println(user.getFirstname());
 
         boolean onlyPublic = true ;
-        List<PostDTO> posts = postService.getNewerPosts(userId, date, limit, onlyPublic , user);
+        List<PostDTO> posts = postService.getNewerPosts(userId, date, limit, onlyPublic , user  ,tag);
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -305,6 +321,7 @@ public class PostController {
     public ResponseEntity<ApiResponse> getMYOlderPosts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String tag,
             Principal connectedUser
     )
     {
@@ -312,7 +329,7 @@ public class PostController {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         boolean onlyPublic = false ;
-        List<PostDTO> posts = postService.getOlderPosts(user.getId(), date, limit, onlyPublic , user);
+        List<PostDTO> posts = postService.getOlderPosts(user.getId(), date, limit, onlyPublic , user  , tag);
 
 
         ApiResponse res =  ApiResponse.builder()
@@ -333,13 +350,14 @@ public class PostController {
     public ResponseEntity<ApiResponse> getMyNewerPosts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
             @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String tag,
             Principal connectedUser
     )
     {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         boolean onlyPublic = false ;
-        List<PostDTO> posts = postService.getNewerPosts(user.getId(), date, limit, onlyPublic , user);
+        List<PostDTO> posts = postService.getNewerPosts(user.getId(), date, limit, onlyPublic , user , tag);
 
 
         ApiResponse res =  ApiResponse.builder()
@@ -351,6 +369,67 @@ public class PostController {
                 .build();
 
 
+
+        return ResponseEntity.ok(res);
+    }
+
+
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<?> getPostComments(
+            @PathVariable Integer postId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending()
+        );
+
+        Page<CommentDTO> comments = postService.getCommentsByPostIdWithUserInfo(postId, pageable);
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Comments fetched successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data (comments)
+                .build();
+        return ResponseEntity.ok(res);
+    }
+
+    @DeleteMapping("/comments/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<?> deleteComment(
+            @PathVariable Integer id,
+            Principal connectedUser
+    ) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+
+        if ( !comment.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.builder()
+                            .success(false)
+                            .message("You are not allowed to delete this comment")
+                            .timestamp(LocalDateTime.now())
+                            .status(HttpStatus.FORBIDDEN.value())
+                            .build());
+        }
+
+        commentRepository.delete(comment);
+
+        ApiResponse res = ApiResponse.builder()
+                .success(true)
+                .message("Comment deleted successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .build();
 
         return ResponseEntity.ok(res);
     }

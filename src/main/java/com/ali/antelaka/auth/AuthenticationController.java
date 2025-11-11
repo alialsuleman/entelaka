@@ -1,6 +1,10 @@
 package com.ali.antelaka.auth;
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.post.repository.CommentRepository;
+import com.ali.antelaka.post.repository.LikeRepository;
+import com.ali.antelaka.post.repository.PostImageRepository;
+import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.user.entity.User;
@@ -46,8 +50,23 @@ public class AuthenticationController {
   @Autowired
   private OtpService otpService ;
 
+  @Autowired
+  private PostRepository postRepository ;
+
+    @Autowired
+    private LikeRepository likeRepository ;
+
+    @Autowired
+    private CommentRepository commentRepository ;
+
+    @Autowired
+    private PostImageRepository postImageRepository ;
+
+
   @Value("${spring.security.oauth2.client.registration.google.client-id}")
   private String google_client_id;
+
+
 
 
   @PostMapping("/register")
@@ -236,7 +255,7 @@ public class AuthenticationController {
   @GetMapping("/alluser")
   public ResponseEntity<Collection<User>> alluser() {
       var x =  userRepository.findAll() ;
-      System.out.println(x.get(0).getFirstname());
+      //System.out.println(x.get(0).getFirstname());
       return ResponseEntity.ok().body(x) ;
   }
   @GetMapping("/alltoken")
@@ -251,7 +270,7 @@ public class AuthenticationController {
 
   @DeleteMapping("/deleteall")
   public ResponseEntity<String> deleteall() {
-    //this.tokenRepository.deleteAll();
+    this.postRepository.deleteAll();
     this.userRepository.deleteAll();
 
     return ResponseEntity.ok().body("done !") ;

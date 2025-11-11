@@ -43,5 +43,17 @@ public class Comment  {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonIgnore
-    private User user  ;
+    private User user;
+
+    public String getUserName() {
+        return user != null ? user.getUsername() : null;
+    }
+
+    public Integer getUserId() {
+        return user != null ? user.getId() : null;
+    }
+    public String getUserAvatar()
+    {
+        return user != null ? user.getImagePath() : null;
+    }
 }
