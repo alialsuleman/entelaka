@@ -2,6 +2,7 @@ package com.ali.antelaka.user.entity;
 
 import com.ali.antelaka.follow.Follow;
 import com.ali.antelaka.page.entity.PageEntity;
+import com.ali.antelaka.post.entity.LikeOnComment;
 import com.ali.antelaka.post.entity.Post;
 import com.ali.antelaka.post.entity.SaveEntity;
 import com.ali.antelaka.token.Token;
@@ -68,6 +69,9 @@ public class User implements UserDetails {
   @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
   private List<Follow> followers;
 
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<LikeOnComment> likeOnComments;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @JsonIgnore

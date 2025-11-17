@@ -16,4 +16,5 @@ public class CommentDTO {
     private String userName; // معلومات إضافية من المستخدم
     private Integer userId;
     private String userAvatar ;
+    private Integer numberOfReplies ;
 }

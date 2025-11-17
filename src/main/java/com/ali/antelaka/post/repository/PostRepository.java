@@ -76,7 +76,14 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     );
 
 
-
+    @Query("SELECT p FROM Post p WHERE " +
+            "(:tag IS NULL OR p.tag LIKE %:tag%) " +
+            "AND (:searchText IS NULL OR LOWER(p.text) LIKE LOWER(CONCAT('%', :searchText, '%')))")
+    List<Post> searchPosts(
+            @Param("tag") String tag,
+            @Param("searchText") String searchText,
+            Pageable pageable
+    );
 
 
 

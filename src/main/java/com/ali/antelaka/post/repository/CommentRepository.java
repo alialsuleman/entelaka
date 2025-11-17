@@ -11,6 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository  extends JpaRepository<Comment, Integer> {
 
+
+    Page<Comment> findByPostIdAndCommentParentIsNullOrderByCreatedAtDesc(Integer postId, Pageable pageable);
+
+    Page<Comment> findByCommentParentIdOrderByCreatedAtAsc(Integer commentParentId, Pageable pageable);
+
     Page<Comment> findByPostId(Integer postId, Pageable pageable);
 
     Page<Comment> findByPostIdOrderByCreatedAtDesc(Integer postId, Pageable pageable);

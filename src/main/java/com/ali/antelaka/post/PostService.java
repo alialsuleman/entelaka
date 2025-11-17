@@ -115,7 +115,7 @@ public class PostService {
     }
 
 
-    public int flipSave  (User user,Integer postId  )
+    public int flipSave  (User user,Integer postId , boolean isPublic )
     {
         var o_post =  this.postRepository.findById(postId) ;
         if (!o_post.isPresent()) return 0 ;
@@ -132,24 +132,47 @@ public class PostService {
             var saveEntity = SaveEntity.builder()
                     .post(post)
                     .user(user)
+                    .isPublic(isPublic)
                     .build() ;
             this.saveRepository.save(saveEntity) ;
          }
         return 2 ;
     }
 
-    public boolean createComment  (User user, Integer postId  , CreateCommentRequest  createCommentRequest)
+    public boolean createComment  (User user, Integer postId, Integer commentParent , CreateCommentRequest  createCommentRequest)
     {
         var o_post =  this.postRepository.findById(postId) ;
         if (!o_post.isPresent()) return false ;
+
+        System.out.println(commentParent);
+        Comment parentComment  = null ;
+        int inc =0 ;
+        if (commentParent != null )
+        {
+            var o_comment =  this.commentRepository.findById(commentParent) ;
+            if (!o_comment.isPresent()) return false ;
+
+            parentComment = o_comment.get() ;
+            parentComment.setNumberOfSubComment(parentComment.getNumberOfSubComment()+1) ;
+            System.out.println("ggood");
+
+            this.commentRepository.save(parentComment) ;
+
+            inc =0 ;
+        }
 
         var post= o_post.get();
         var comment = Comment.builder()
                 .post(post)
                 .user(user)
+                .commentParent(parentComment)
                 .text(createCommentRequest.getText())
                 .build() ;
+
+
+
         this.commentRepository.save(comment) ;
+
         post.setNumberOfComment(post.getNumberOfComment() + 1  ); ;
         this.postRepository.save(post) ;
 
@@ -216,6 +239,14 @@ public class PostService {
     }
 
 
+    public List<PostDTO> searchPosts( String tag , String searchText, Pageable pageable , User user) {
+        List<Post> posts =  postRepository.searchPosts( tag , searchText, pageable);
+        return posts.stream()
+                .map(post -> new PostDTO(post, user, likeRepository , saveRepository , followRepository ))
+                .toList();
+
+    }
+
     public List<PostDTO> getOlderPosts(Integer userId, LocalDateTime x, int limit  , boolean onlyPublic , User user  , String tag) {
         Pageable pageable = PageRequest.of(0, limit);
         if (x == null) {
@@ -257,7 +288,7 @@ public class PostService {
     }
 
     public Page<CommentDTO> getCommentsByPostIdWithUserInfo(Integer postId, Pageable pageable) {
-        return commentRepository.findByPostId(postId, pageable)
+        return commentRepository.findByPostIdAndCommentParentIsNullOrderByCreatedAtDesc(postId, pageable)
                 .map(comment -> CommentDTO.builder()
                         .id(comment.getId())
                         .text(comment.getText())
@@ -266,10 +297,47 @@ public class PostService {
                         .userName(comment.getUser().getFirstname() + comment.getUser().getLastname())
                         .userId(comment.getUser().getId())
                         .userAvatar(comment.getUser().getImagePath())
+                        .numberOfReplies(comment.getNumberOfSubComment())
+                        .build());
+    }
+
+    public Page<CommentDTO> getRepliesOnCommentsByCommentIdWithUserInfo(Integer postId, Pageable pageable) {
+        return commentRepository.findByCommentParentIdOrderByCreatedAtAsc(postId, pageable)
+                .map(comment -> CommentDTO.builder()
+                        .id(comment.getId())
+                        .text(comment.getText())
+                        .createdAt(comment.getCreatedAt())
+                        .updatedAt(comment.getUpdatedAt())
+                        .userName(comment.getUser().getFirstname() + comment.getUser().getLastname())
+                        .userId(comment.getUser().getId())
+                        .userAvatar(comment.getUser().getImagePath())
+                        .numberOfReplies(0)
                         .build());
     }
 
 
+
+
+
+
+    public Comment editComment(Integer commentId, String newText, User user) {
+
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+
+        if (!comment.getUser().getId().equals(user.getId()) &&
+                !user.getRole().name().equals("ADMIN")) {
+
+            throw new RuntimeException("You are not allowed to edit this comment");
+        }
+
+
+        comment.setText(newText);
+
+        return commentRepository.save(comment);
+    }
 
 
 }

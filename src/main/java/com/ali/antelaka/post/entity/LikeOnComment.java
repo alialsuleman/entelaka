@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table
-public class SaveEntity {
+public class LikeOnComment {
 
 
     @Id
@@ -28,9 +28,9 @@ public class SaveEntity {
     @Builder.Default()  private LocalDateTime createdAt = LocalDateTime.now() ;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "comment_id")
     @JsonIgnore
-    private Post post  ;
+    private Comment comment  ;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,6 +38,4 @@ public class SaveEntity {
     @JsonIgnore
     private User user  ;
 
-
-    private boolean isPublic;
 }

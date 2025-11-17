@@ -13,6 +13,7 @@ import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.post.repository.SaveRepository;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
+import com.ali.antelaka.post.request.EditCommentRequest;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -199,15 +200,18 @@ public class PostController {
     }
 
 
-    @PostMapping ("/save/{postId}")
+
+    // need edit
+    @PostMapping ("/{postId}/save/")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse<?>> savePost(
             @PathVariable Integer postId,
+            @RequestParam(defaultValue = "false" ) boolean isPublic,
             Principal connectedUser
     )
     {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        int ok = this.postService.flipSave(user, postId) ;
+        int ok = this.postService.flipSave(user, postId , isPublic) ;
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -229,15 +233,21 @@ public class PostController {
 
 
 
-    @PostMapping ("/comment/{postId}")
+    @PostMapping ("/comment")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse<?>> addComment (
-            @PathVariable Integer postId,
+
+            @RequestParam() Integer postId,
+            @RequestParam() Integer commentParent,
+
             @RequestBody CreateCommentRequest createCommentRequest,
             Principal connectedUser
     ) {
+
+        if (commentParent == 0 ) commentParent= null ;
+
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        boolean ok = this.postService.createComment(user, postId , createCommentRequest) ;
+        boolean ok = this.postService.createComment(user, postId , commentParent , createCommentRequest) ;
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -258,6 +268,70 @@ public class PostController {
 
         return  ResponseEntity.status(HttpStatus.CREATED.value()).body(res) ;
     }
+
+    @PostMapping("/comment/edit")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<ApiResponse<?>> editComment(
+            @RequestBody EditCommentRequest req,
+            Principal connectedUser) {
+
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        Comment updated = postService.editComment(req.getCommentId(), req.getNewText(), user);
+
+        ApiResponse res = ApiResponse.builder()
+                .success(true)
+                .message("Comment updated successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data(updated)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+
+
+
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ApiResponse> searchPosts(
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String searchText,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir ,
+            Principal connectedUser
+    ) {
+
+        User user  = null ;
+        if (connectedUser != null )user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        if(user != null)
+            System.out.println(user.getFirstname());
+
+        Pageable pageable = PageRequest.of(page, size,
+                sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending()
+        );
+
+        List<PostDTO> result = postService.searchPosts(tag, searchText, pageable , user);
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Post fetched successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (result)
+                .build();
+
+        return ResponseEntity.ok(res);
+    }
+
+
+
+
+
+
 
 
     @GetMapping("/older")
@@ -281,7 +355,7 @@ public class PostController {
                 .success(true)
                 .message("Post fetched successfully")
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .data (posts)
                 .build();
 
@@ -308,7 +382,7 @@ public class PostController {
                 .success(true)
                 .message("Post fetched successfully")
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .data (posts)
                 .build();
 
@@ -336,7 +410,7 @@ public class PostController {
                 .success(true)
                 .message("Post fetched successfully")
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .data (posts)
                 .build();
 
@@ -364,7 +438,7 @@ public class PostController {
                 .success(true)
                 .message("Post fetched successfully")
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CREATED.value())
+                .status(HttpStatus.OK.value())
                 .data (posts)
                 .build();
 
@@ -400,6 +474,38 @@ public class PostController {
         return ResponseEntity.ok(res);
     }
 
+
+
+    @GetMapping("/repliesoncomment")
+    public ResponseEntity<?> getRepliesOnComments(
+
+            @RequestParam() int commentId ,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending()
+        );
+
+        Page<CommentDTO> comments = postService.getRepliesOnCommentsByCommentIdWithUserInfo(commentId, pageable);
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Comments fetched successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data (comments)
+                .build();
+        return ResponseEntity.ok(res);
+    }
+
+
+
+
     @DeleteMapping("/comments/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> deleteComment(
@@ -411,6 +517,11 @@ public class PostController {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
+        if (comment.getCommentParent() != null)
+        {
+            comment.getCommentParent().setNumberOfSubComment( comment.getCommentParent().getNumberOfSubComment()-1);
+            this.commentRepository.save( comment.getCommentParent()) ;
+        }
 
         if ( !comment.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
