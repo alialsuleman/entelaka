@@ -29,7 +29,7 @@ public class Comment  {
     private String text ;
 
     @Builder.Default()
-    private Integer numberOfLike =0 ;
+    private Integer numberOfLikes =0 ;
 
     @Builder.Default()
     private Integer numberOfSubComment =0 ;

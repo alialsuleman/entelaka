@@ -38,6 +38,9 @@ public class PostService {
     private LikeRepository likeRepository ;
 
     @Autowired
+    private LikeOnCommentRepository likeOnCommentRepository ;
+
+    @Autowired
     private CommentRepository commentRepository ;
 
     @Autowired
@@ -287,32 +290,14 @@ public class PostService {
 
     }
 
-    public Page<CommentDTO> getCommentsByPostIdWithUserInfo(Integer postId, Pageable pageable) {
+    public List<CommentDTO> getCommentsByPostIdWithUserInfo(Integer postId, Pageable pageable, User user) {
         return commentRepository.findByPostIdAndCommentParentIsNullOrderByCreatedAtDesc(postId, pageable)
-                .map(comment -> CommentDTO.builder()
-                        .id(comment.getId())
-                        .text(comment.getText())
-                        .createdAt(comment.getCreatedAt())
-                        .updatedAt(comment.getUpdatedAt())
-                        .userName(comment.getUser().getFirstname() + comment.getUser().getLastname())
-                        .userId(comment.getUser().getId())
-                        .userAvatar(comment.getUser().getImagePath())
-                        .numberOfReplies(comment.getNumberOfSubComment())
-                        .build());
+                .map(comment -> new CommentDTO(comment , user , likeOnCommentRepository , followRepository)) .toList();
     }
 
-    public Page<CommentDTO> getRepliesOnCommentsByCommentIdWithUserInfo(Integer postId, Pageable pageable) {
+    public List<CommentDTO> getRepliesOnCommentsByCommentIdWithUserInfo(Integer postId, Pageable pageable , User user) {
         return commentRepository.findByCommentParentIdOrderByCreatedAtAsc(postId, pageable)
-                .map(comment -> CommentDTO.builder()
-                        .id(comment.getId())
-                        .text(comment.getText())
-                        .createdAt(comment.getCreatedAt())
-                        .updatedAt(comment.getUpdatedAt())
-                        .userName(comment.getUser().getFirstname() + comment.getUser().getLastname())
-                        .userId(comment.getUser().getId())
-                        .userAvatar(comment.getUser().getImagePath())
-                        .numberOfReplies(0)
-                        .build());
+                .map(comment -> new CommentDTO(comment , user , likeOnCommentRepository , followRepository)  ) .toList();
     }
 
 
@@ -339,6 +324,33 @@ public class PostService {
         return commentRepository.save(comment);
     }
 
+
+
+
+    public boolean flipLikeOnComment  (User user,Integer commentId  )
+    {
+        var o_comment =  this.commentRepository.findById(commentId) ;
+        if (!o_comment.isPresent()) return false ;
+
+        var is_added  =  this.likeOnCommentRepository.findByUserIdAndCommentId(user.getId() , commentId) ;
+        var comment= o_comment.get();
+
+        if (is_added.isPresent())
+        {
+            this.likeOnCommentRepository.delete(is_added.get());
+            comment.setNumberOfLikes(comment.getNumberOfLikes() -1 );
+            this.commentRepository.save(comment) ;
+        }else {
+            var like = LikeOnComment.builder()
+                    .comment(comment)
+                    .user(user)
+                    .build() ;
+            this.likeOnCommentRepository.save(like) ;
+            comment.setNumberOfLikes(comment.getNumberOfLikes()   + 1  ); ;
+            this.commentRepository.save(comment) ;
+        }
+        return true ;
+    }
 
 }
 

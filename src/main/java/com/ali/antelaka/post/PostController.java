@@ -7,10 +7,7 @@ import com.ali.antelaka.post.DTO.CommentDTO;
 import com.ali.antelaka.post.DTO.PostDTO;
 import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.Post;
-import com.ali.antelaka.post.repository.CommentRepository;
-import com.ali.antelaka.post.repository.LikeRepository;
-import com.ali.antelaka.post.repository.PostRepository;
-import com.ali.antelaka.post.repository.SaveRepository;
+import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.post.request.EditCommentRequest;
@@ -52,6 +49,9 @@ public class PostController {
     @Autowired
     private FollowRepository followRepository ;
 
+
+    @Autowired
+    private LikeOnCommentRepository likeOnCommentRepository;
 
     @Autowired
     private CommentRepository commentRepository ;
@@ -165,6 +165,35 @@ public class PostController {
     }
 
 
+    @PostMapping ("/like/comment/{commentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ApiResponse<?>> addLikeOnComment(
+            @PathVariable Integer commentId,
+            Principal connectedUser
+    )
+    {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        boolean ok = this.postService.flipLikeOnComment(user, commentId) ;
+
+        ApiResponse res =  ApiResponse.builder()
+                .success(true)
+                .message("Like flipped successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CREATED.value())
+                .data (null)
+                .build();
+
+
+        if (!ok)
+        {
+            res.setMessage("Something went wrong");
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res) ;
+        }
+
+
+        return  ResponseEntity.status(HttpStatus.CREATED.value()).body(res) ;
+    }
 
 
 
@@ -277,14 +306,17 @@ public class PostController {
 
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
-        Comment updated = postService.editComment(req.getCommentId(), req.getNewText(), user);
+        Comment comment = postService.editComment(req.getCommentId(), req.getNewText(), user);
+
+        CommentDTO commentDTO =  new CommentDTO(comment, user , likeOnCommentRepository , followRepository) ;
+
 
         ApiResponse res = ApiResponse.builder()
                 .success(true)
                 .message("Comment updated successfully")
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.OK.value())
-                .data(updated)
+                .data(commentDTO)
                 .build();
 
         return ResponseEntity.status(HttpStatus.OK).body(res);
@@ -295,7 +327,7 @@ public class PostController {
 
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+   // @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse> searchPosts(
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String searchText,
@@ -449,12 +481,15 @@ public class PostController {
 
 
     @GetMapping("/{postId}/comments")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getPostComments(
             @PathVariable Integer postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
+            @RequestParam(defaultValue = "desc") String direction,
+            Principal connectedUser
+    ) {
 
         Pageable pageable = PageRequest.of(
                 page,
@@ -462,7 +497,12 @@ public class PostController {
                 direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending()
         );
 
-        Page<CommentDTO> comments = postService.getCommentsByPostIdWithUserInfo(postId, pageable);
+        User user  = null ;
+        if (connectedUser != null )user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        if(user != null) System.out.println(user.getFirstname());
+
+
+        List<CommentDTO> comments = postService.getCommentsByPostIdWithUserInfo(postId, pageable , user);
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -477,13 +517,16 @@ public class PostController {
 
 
     @GetMapping("/repliesoncomment")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getRepliesOnComments(
 
             @RequestParam() int commentId ,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
+            @RequestParam(defaultValue = "desc") String direction ,
+            Principal connectedUser
+    ) {
 
         Pageable pageable = PageRequest.of(
                 page,
@@ -491,7 +534,12 @@ public class PostController {
                 direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending()
         );
 
-        Page<CommentDTO> comments = postService.getRepliesOnCommentsByCommentIdWithUserInfo(commentId, pageable);
+
+        User user  = null ;
+        if (connectedUser != null )user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        if(user != null) System.out.println(user.getFirstname());
+
+        List<CommentDTO> comments = postService.getRepliesOnCommentsByCommentIdWithUserInfo(commentId, pageable , user);
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
