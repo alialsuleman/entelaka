@@ -268,6 +268,7 @@ public class PostController {
 
             @RequestParam() Integer postId,
             @RequestParam() Integer commentParent,
+            @RequestParam() Integer  repliedUserId  ,
 
             @RequestBody CreateCommentRequest createCommentRequest,
             Principal connectedUser
@@ -276,7 +277,11 @@ public class PostController {
         if (commentParent == 0 ) commentParent= null ;
 
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        boolean ok = this.postService.createComment(user, postId , commentParent , createCommentRequest) ;
+
+        CommentDTO commentDTO = this.postService.createComment(user, postId , commentParent  , repliedUserId, createCommentRequest) ;
+
+        commentDTO.getOwner().setMe(true);
+
 
         ApiResponse res =  ApiResponse.builder()
                 .success(true)
@@ -287,13 +292,13 @@ public class PostController {
                 .build();
 
 
-        if (!ok)
+        if (commentDTO == null)
         {
             res.setMessage("Something went wrong");
             res.setStatus(HttpStatus.BAD_REQUEST.value());
             return  ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res) ;
         }
-
+        res.setData(commentDTO);
 
         return  ResponseEntity.status(HttpStatus.CREATED.value()).body(res) ;
     }

@@ -28,6 +28,14 @@ public class CommentDTO {
     private Integer numberOfReplies ;
     private Integer numberOfLikes ;
 
+    @Builder.Default()
+    private Integer repliedUserId  =0 ;
+
+    @Builder.Default()
+    private String repliedUsername = "";
+
+
+
     private boolean isLiked ;
     private Owner owner ;
 
@@ -53,6 +61,9 @@ public class CommentDTO {
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
 
+        this.repliedUsername = comment.getRepliedUsername() ;
+        this.repliedUserId =  comment.getRepliedUserId() ;
+
         this.owner.setUserId(comment.getUser() != null ? comment.getUser().getId() : null ) ;
         this.owner.setUsername( name!= null ?name  : null );
         this.owner.setUserImagePath( comment.getUser().getImagePath() != null ?comment.getUser().getImagePath()  : null ) ;
@@ -75,6 +86,10 @@ public class CommentDTO {
         this.numberOfReplies = comment.getNumberOfSubComment();
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
+
+        this.repliedUsername = comment.getRepliedUsername() ;
+        this.repliedUserId =  comment.getRepliedUserId() ;
+
 
         this.owner = new Owner();
         this.owner.setUserId(comment.getUser() != null ? comment.getUser().getId() : null);

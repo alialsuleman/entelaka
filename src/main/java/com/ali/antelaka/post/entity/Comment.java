@@ -35,6 +35,12 @@ public class Comment  {
     private Integer numberOfSubComment =0 ;
 
 
+    @Builder.Default()
+    private Integer repliedUserId  =0 ;
+
+    @Builder.Default()
+    private String repliedUsername = "";
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_parent_id")
@@ -44,6 +50,7 @@ public class Comment  {
     @OneToMany(mappedBy = "commentParent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Comment> replies = new ArrayList<>();
+
 
 
 

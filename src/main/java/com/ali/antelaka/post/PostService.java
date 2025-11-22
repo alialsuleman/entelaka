@@ -9,6 +9,7 @@ import com.ali.antelaka.post.entity.*;
 import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
+import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,9 @@ public class PostService {
 
     @Autowired
     private FollowRepository followRepository ;
+
+    @Autowired
+    private UserRepository userRepository ;
 
     public Optional<Post> getPostById(Integer postId)
     {
@@ -142,10 +146,12 @@ public class PostService {
         return 2 ;
     }
 
-    public boolean createComment  (User user, Integer postId, Integer commentParent , CreateCommentRequest  createCommentRequest)
+    public CommentDTO createComment  (User user, Integer postId, Integer commentParent , Integer repliedUserId , CreateCommentRequest  createCommentRequest)
     {
+
+
         var o_post =  this.postRepository.findById(postId) ;
-        if (!o_post.isPresent()) return false ;
+        if (!o_post.isPresent()) return null ;
 
         System.out.println(commentParent);
         Comment parentComment  = null ;
@@ -153,7 +159,7 @@ public class PostService {
         if (commentParent != null )
         {
             var o_comment =  this.commentRepository.findById(commentParent) ;
-            if (!o_comment.isPresent()) return false ;
+            if (!o_comment.isPresent()) return null ;
 
             parentComment = o_comment.get() ;
             parentComment.setNumberOfSubComment(parentComment.getNumberOfSubComment()+1) ;
@@ -164,12 +170,36 @@ public class PostService {
             inc =0 ;
         }
 
+        String name = "";
+
+        System.out.println("repliedUserId   : " +  repliedUserId);
+        if (repliedUserId != null && repliedUserId !=0 )
+        {
+            System.out.println("enter with repliedUserId   : " +  repliedUserId);
+
+            var o_user  = this.userRepository.findById(repliedUserId) ;
+            if (!o_user.isPresent()) return null ;
+
+            var replied_user = o_user.get() ;
+
+            if (replied_user.getFirstname() != null) {
+                name += replied_user.getFirstname();
+            }
+            if (replied_user.getLastname() != null) {
+                name += " " + replied_user.getLastname();
+            }
+        }
+        System.out.println("repliedUserName  : " +  name);
+
+
         var post= o_post.get();
         var comment = Comment.builder()
                 .post(post)
                 .user(user)
                 .commentParent(parentComment)
                 .text(createCommentRequest.getText())
+                .repliedUserId(repliedUserId)
+                .repliedUsername(name)
                 .build() ;
 
 
@@ -179,7 +209,7 @@ public class PostService {
         post.setNumberOfComment(post.getNumberOfComment() + 1  ); ;
         this.postRepository.save(post) ;
 
-        return true ;
+        return new CommentDTO(comment) ;
     }
 
     public boolean deletePost  (User user, Integer postId )
