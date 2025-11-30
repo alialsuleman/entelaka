@@ -2,15 +2,19 @@ package com.ali.antelaka.user.service;
 
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationService;
+import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.google.GoogleUser;
 
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.page.entity.PageType;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.user.UserRepository;
+import com.ali.antelaka.user.dto.UserPublicProfileResponse;
 import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
+import com.ali.antelaka.user.request.UpdateProfileRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +31,10 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository repository;
+
+    @Autowired
+    FollowRepository followRepository ;
+
 
     @Autowired
     private AuthenticationService authenticationService ;
@@ -113,5 +121,74 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         repository.save(user);
         return apiRes;
+    }
+
+    public UserPublicProfileResponse getUserProfileById(Integer targetUserId, User user) {
+         User targetUser = repository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        boolean isMyProfile =false ;
+        boolean isFollowing = false;
+
+        if (user !=  null ) {
+            isMyProfile =  targetUser.getEmail().equals( user.getEmail());
+            isFollowing =  false ;
+            if (followRepository.findByFollowerAndFollowing( user , targetUser) != null)
+            {
+                isFollowing =  true ;
+            }
+        }
+
+        return UserPublicProfileResponse.builder()
+                .id(targetUser.getId())
+                .firstname(targetUser.getFirstname())
+                .lastname(targetUser.getLastname())
+                .bio(targetUser.getBio())
+                .imagePath(targetUser.getImagePath())
+                .role(targetUser.getRole().name())
+                .email(isMyProfile ? targetUser.getEmail() : null)
+
+                .postsCount(targetUser.getPosts() != null ? targetUser.getPosts().size() : 0)
+                .followersCount(targetUser.getFollowers() != null ? targetUser.getFollowers().size() : 0)
+                .followingCount(targetUser.getFollowing() != null ? targetUser.getFollowing().size() : 0)
+                .isMyProfile(isMyProfile)
+                .isFollowing(isFollowing)
+                .build();
+    }
+
+    @Transactional
+    public UserPublicProfileResponse updateProfile(User user, UpdateProfileRequest request) {
+
+        if (request.getFirstname() != null) {
+            user.setFirstname(request.getFirstname());
+        }
+        if (request.getLastname() != null) {
+            user.setLastname(request.getLastname());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        User savedUser = repository.save(user);
+        return mapToProfileResponse(savedUser);
+    }
+
+
+
+    private UserPublicProfileResponse mapToProfileResponse(User user) {
+        return UserPublicProfileResponse.builder()
+                .id(user.getId())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail())
+                .bio(user.getBio())
+                .imagePath(user.getImagePath())
+                .role(user.getRole().name())
+                // التعامل الآمن مع القوائم لتجنب NullPointer إذا كانت القائمة فارغة
+                .postsCount(user.getPosts() != null ? user.getPosts().size() : 0)
+                .followersCount(user.getFollowers() != null ? user.getFollowers().size() : 0)
+                .followingCount(user.getFollowing() != null ? user.getFollowing().size() : 0)
+                .build();
     }
 }

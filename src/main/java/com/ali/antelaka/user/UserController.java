@@ -3,8 +3,10 @@ package com.ali.antelaka.user;
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationResponse;
 import com.ali.antelaka.file.FileStorageService;
+import com.ali.antelaka.user.dto.UserPublicProfileResponse;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
+import com.ali.antelaka.user.request.UpdateProfileRequest;
 import com.ali.antelaka.user.service.OtpService;
 import com.ali.antelaka.user.service.UserService;
 import jakarta.validation.Valid;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +45,64 @@ public class UserController {
 
     @Autowired
     private OtpService otpService;
+
+    @PutMapping("/updateuserinfo")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ApiResponse> updateBasicProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Principal connectedUser
+    ) {
+
+        User  user = user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        UserPublicProfileResponse updatedProfile = service.updateProfile(user, request);
+
+        // 2. بناء استجابة ApiResponse
+        ApiResponse response = ApiResponse.builder()
+                .success(true)
+                .message("Basic profile information updated successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data(updatedProfile) // تمرير الـ DTO المحدث
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse> getUserProfile(
+            @PathVariable Integer userId,
+            Principal connectedUser
+    ) {
+
+
+        User user  = null ;
+        if (connectedUser != null )user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        UserPublicProfileResponse profile  ;
+        if (user != null && userId ==0   )
+        {
+            userId = user.getId() ;
+        }
+        if(user != null)
+            profile = service.getUserProfileById(userId , user);
+        else profile = service.getUserProfileById(userId , null);
+
+
+
+
+
+        ApiResponse response = ApiResponse.builder()
+                .success(true)
+                .message("User profile retrieved successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data(profile)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
 
     @GetMapping("/hello")

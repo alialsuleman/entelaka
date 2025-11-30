@@ -31,6 +31,10 @@ public class CommentDTO {
     @Builder.Default()
     private Integer repliedUserId  =0 ;
 
+
+    @Builder.Default()
+    private Integer commentParentId  =0 ;
+
     @Builder.Default()
     private String repliedUsername = "";
 
@@ -61,6 +65,8 @@ public class CommentDTO {
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
 
+        this.commentParentId =  comment.getCommentParent() != null ? comment.getCommentParent().getId() :0;
+
         this.repliedUsername = comment.getRepliedUsername() ;
         this.repliedUserId =  comment.getRepliedUserId() ;
 
@@ -86,6 +92,10 @@ public class CommentDTO {
         this.numberOfReplies = comment.getNumberOfSubComment();
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
+
+
+        this.commentParentId =  comment.getCommentParent() != null ? comment.getCommentParent().getId() :0;
+
 
         this.repliedUsername = comment.getRepliedUsername() ;
         this.repliedUserId =  comment.getRepliedUserId() ;

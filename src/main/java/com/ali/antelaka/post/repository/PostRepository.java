@@ -1,6 +1,7 @@
 package com.ali.antelaka.post.repository;
 
 import com.ali.antelaka.post.entity.Post;
+import com.ali.antelaka.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,9 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
+
+
+    Page<Post> findByUser(User user, Pageable pageable);
 
 
     @Query("""

@@ -53,6 +53,11 @@ public class User implements UserDetails {
   private Role role;
 
 
+
+  private String bio;
+
+
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<PageEntity> pages;
 

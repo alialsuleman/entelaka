@@ -81,7 +81,32 @@ public class PostController {
         return ResponseEntity.ok(res);
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<ApiResponse<?>> getUserPosts(
+            @PathVariable("id") Integer userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal connectedUser) {
 
+        var currentUser = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        if (userId == 0 && currentUser!=null  )
+        {
+            userId = currentUser.getId() ;
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<PostDTO> userPosts = postService.getPostsByUser(userId, currentUser, pageable);
+
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(true)
+                .message("User posts fetched successfully")
+                .status(200)
+                .timestamp(LocalDateTime.now())
+                .data(userPosts)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
@@ -228,7 +253,30 @@ public class PostController {
         return  ResponseEntity.status(HttpStatus.CREATED.value()).body(res) ;
     }
 
+    @GetMapping("/getsavedpost")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ApiResponse<?>> getSavedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal connectedUser
+    ) {
 
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Page<PostDTO> savedPosts = postService.getSavedPosts(user, pageable);
+
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(true)
+                .message("Saved posts fetched successfully")
+                .status(200)
+                .timestamp(LocalDateTime.now())
+                .data(savedPosts)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     // need edit
     @PostMapping ("/{postId}/save/")

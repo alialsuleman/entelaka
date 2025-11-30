@@ -96,6 +96,18 @@ public class PostService {
     }
 
 
+    public Page<PostDTO> getPostsByUser(Integer userId, User currentUser, Pageable pageable) {
+
+        User postOwner = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Page<Post> posts = postRepository.findByUser(postOwner, pageable);
+
+        return posts.map(post ->
+                new PostDTO(post, currentUser, likeRepository, saveRepository, followRepository)
+        );
+    }
+
     public boolean flipLike  (User user,Integer postId  )
     {
         var o_post =  this.postRepository.findById(postId) ;
@@ -145,6 +157,21 @@ public class PostService {
          }
         return 2 ;
     }
+
+
+    public Page<PostDTO> getSavedPosts(User user, Pageable pageable) {
+        Page<SaveEntity> savedEntities = saveRepository.findByUser(user, pageable);
+
+        return savedEntities
+                .map(save -> new PostDTO(
+                        save.getPost(),
+                        user,
+                        likeRepository,
+                        saveRepository,
+                        followRepository
+                ));
+    }
+
 
     public CommentDTO createComment  (User user, Integer postId, Integer commentParent , Integer repliedUserId , CreateCommentRequest  createCommentRequest)
     {
