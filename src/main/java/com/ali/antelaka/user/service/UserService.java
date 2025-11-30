@@ -134,7 +134,7 @@ public class UserService {
         if (user !=  null ) {
             isMyProfile =  targetUser.getEmail().equals( user.getEmail());
             isFollowing =  false ;
-            if (followRepository.findByFollowerAndFollowing( user , targetUser) != null)
+            if (followRepository.findByFollowerAndFollowing(user, targetUser).isPresent())
             {
                 isFollowing =  true ;
             }
