@@ -4,7 +4,9 @@ import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.post.DTO.CommentDTO;
+import com.ali.antelaka.post.DTO.CommentHistoryDTO;
 import com.ali.antelaka.post.DTO.PostDTO;
+import com.ali.antelaka.post.DTO.PostSummaryDTO;
 import com.ali.antelaka.post.entity.*;
 import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
@@ -409,6 +412,59 @@ public class PostService {
         return true ;
     }
 
+
+
+
+    public Page<CommentHistoryDTO> getUserCommentHistory(Integer userId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Comment> comments = commentRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
+
+        return comments.map(this::convertToHistoryDTO);
+    }
+
+    private CommentHistoryDTO convertToHistoryDTO(Comment c) {
+
+        Post post = c.getPost();
+        User publisher = post.getUser();
+
+        // text snippet
+        String snippet = (post.getText() != null && post.getText().length() > 120)
+                ? post.getText().substring(0, 120) + "..."
+                : post.getText();
+
+        // publisher info
+
+        String name = "";
+        if ( publisher.getFirstname()  != null )
+        {
+            name+= publisher.getFirstname() ;
+        }
+        if (publisher.getLastname()!=  null)
+        {
+            name += " " +  publisher.getLastname() ;
+        }
+        String publisherName =name ;
+        String publisherAvatar = publisher != null ? publisher.getImagePath() : null;
+
+
+
+        PostSummaryDTO postSummaryDTO = new PostSummaryDTO(
+                post.getId(),
+                snippet,
+                publisherName,
+                publisherAvatar
+        );
+
+        return new CommentHistoryDTO(
+                c.getId(),
+                c.getText(),
+                c.getCreatedAt(),
+                c.getCommentParent() != null ? c.getCommentParent().getId() : null,
+                postSummaryDTO
+        );
+    }
 }
 
 

@@ -10,6 +10,7 @@ import com.ali.antelaka.page.entity.PageType;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.dto.UserPublicProfileResponse;
+import com.ali.antelaka.user.dto.UserSearchDTO;
 import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
@@ -17,6 +18,10 @@ import com.ali.antelaka.user.request.UpdateProfileRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -148,7 +153,10 @@ public class UserService {
                 .imagePath(targetUser.getImagePath())
                 .role(targetUser.getRole().name())
                 .email(isMyProfile ? targetUser.getEmail() : null)
-
+                .whatsappLink(user.getWhatsappLink())
+                .facebookLink(user.getFacebookLink())
+                .telegramLink(user.getTelegramLink())
+                .linkedinLink(user.getLinkedinLink())
                 .postsCount(targetUser.getPosts() != null ? targetUser.getPosts().size() : 0)
                 .followersCount(targetUser.getFollowers() != null ? targetUser.getFollowers().size() : 0)
                 .followingCount(targetUser.getFollowing() != null ? targetUser.getFollowing().size() : 0)
@@ -170,6 +178,19 @@ public class UserService {
             user.setBio(request.getBio());
         }
 
+        if (request.getWhatsappLink() != null) {
+            user.setWhatsappLink(request.getWhatsappLink());
+        }
+        if (request.getFacebookLink() != null) {
+            user.setFacebookLink(request.getFacebookLink());
+        }
+        if (request.getTelegramLink() != null) {
+            user.setTelegramLink(request.getTelegramLink());
+        }
+        if (request.getLinkedinLink() != null) {
+            user.setLinkedinLink(request.getLinkedinLink());
+        }
+
         User savedUser = repository.save(user);
         return mapToProfileResponse(savedUser);
     }
@@ -185,10 +206,39 @@ public class UserService {
                 .bio(user.getBio())
                 .imagePath(user.getImagePath())
                 .role(user.getRole().name())
+                .whatsappLink(user.getWhatsappLink())
+                .facebookLink(user.getFacebookLink())
+                .telegramLink(user.getTelegramLink())
+                .linkedinLink(user.getLinkedinLink())
                 // التعامل الآمن مع القوائم لتجنب NullPointer إذا كانت القائمة فارغة
                 .postsCount(user.getPosts() != null ? user.getPosts().size() : 0)
                 .followersCount(user.getFollowers() != null ? user.getFollowers().size() : 0)
                 .followingCount(user.getFollowing() != null ? user.getFollowing().size() : 0)
+                .build();
+    }
+
+
+
+    public Page<UserSearchDTO> searchUsers(String keyword, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("firstname").ascending());
+
+        Page<User> usersPage = repository.flexibleSearch(keyword, pageable);
+
+        return usersPage.map(this::mapToDTO);
+    }
+
+    private UserSearchDTO mapToDTO(User user) {
+        return UserSearchDTO.builder()
+                .id(user.getId())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .imagePath(user.getImagePath())
+                .bio(user.getBio())
+                .facebookLink(user.getFacebookLink())
+                .linkedinLink(user.getLinkedinLink())
+                .telegramLink(user.getTelegramLink())
+                .whatsappLink(user.getWhatsappLink())
                 .build();
     }
 }

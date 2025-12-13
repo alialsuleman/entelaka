@@ -4,6 +4,7 @@ import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.AuthenticationResponse;
 import com.ali.antelaka.file.FileStorageService;
 import com.ali.antelaka.user.dto.UserPublicProfileResponse;
+import com.ali.antelaka.user.dto.UserSearchDTO;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
 import com.ali.antelaka.user.request.UpdateProfileRequest;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -166,5 +168,27 @@ public class UserController {
           Principal connectedUser
     ) {
         return ResponseEntity.ok().body(service.changePassword( request, connectedUser)  );
+    }
+
+
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse> searchUsers(
+            @RequestParam(required = false) String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        Page<UserSearchDTO> result = service.searchUsers(username, page, size);
+
+        ApiResponse response = ApiResponse.builder()
+                .success(true)
+                .message("Users fetched successfully")
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .data(result)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 }

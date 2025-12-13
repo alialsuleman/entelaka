@@ -25,4 +25,7 @@ public interface CommentRepository  extends JpaRepository<Comment, Integer> {
 
     void deleteById(Integer id);
 
+    Page<Comment> findByUser_IdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
+
+
 }

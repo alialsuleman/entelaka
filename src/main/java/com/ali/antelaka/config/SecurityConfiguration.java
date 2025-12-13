@@ -57,6 +57,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/email/**").permitAll()
                                 .requestMatchers("/posts/**").permitAll()
                                 .requestMatchers("/onlineeditor/languages").permitAll()
+                                .requestMatchers("/code-examples").permitAll()
                                 .requestMatchers("/swagger-ui/index.html").permitAll()
                                 .anyRequest().authenticated()
                 )

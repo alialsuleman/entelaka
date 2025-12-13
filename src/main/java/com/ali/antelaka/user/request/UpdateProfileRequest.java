@@ -14,4 +14,8 @@ public class UpdateProfileRequest {
     private String lastname;
     private String bio;
 
+    private String whatsappLink;
+    private String facebookLink;
+    private String telegramLink;
+    private String linkedinLink;
 }

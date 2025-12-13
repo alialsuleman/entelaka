@@ -18,6 +18,19 @@ import java.util.List;
 @Service
 public class FileStorageService {
 
+
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+    );
+
+    private static final List<String> ALLOWED_EXTENSIONS = List.of(
+            "jpg", "jpeg", "png", "webp"
+    );
+
+
+
     private final String uploadDir = "/home/ali/uploads"  ; // عدل حسب مكانك في الـ VPS
 
     @Autowired
@@ -27,6 +40,8 @@ public class FileStorageService {
         List<String> fileNames = new ArrayList<>();
 
         for (MultipartFile file : files) {
+
+            validateImage(file) ;
             if (!file.isEmpty()) {
                 // اسم فريد لكل صورة
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
@@ -61,4 +76,29 @@ public class FileStorageService {
         File file = filePath.toFile();
         return file.exists() && file.delete();
     }
+
+
+    private void validateImage(MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return;
+        }
+
+        // Content-Type
+        if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
+            throw new RuntimeException("Only image files are allowed");
+        }
+
+        // Extension
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || !originalName.contains(".")) {
+            throw new RuntimeException("Invalid file name");
+        }
+
+        String extension = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new RuntimeException("Invalid file extension");
+        }
+    }
+
 }

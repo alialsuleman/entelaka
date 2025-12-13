@@ -14,6 +14,7 @@ import java.util.List;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,122 +29,133 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Table(name = "_user")
 public class User implements UserDetails {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-  private String firstname;
-  private String lastname;
+    private String firstname;
+    private String lastname;
 
-  @Column(name = "image_path")
-  private String imagePath;
-
-
-
-
-  @Email(message = "Email must be valid")
-  @NotBlank(message = "Email required")
-  @Column(unique = true)
-  private String email;
-  private String password;
+    @Column(name = "image_path")
+    private String imagePath;
 
 
 
-  @Enumerated(EnumType.STRING)
-  private Role role;
+
+    @Email(message = "Email must be valid")
+    @NotBlank(message = "Email required")
+    @Column(unique = true)
+    private String email;
+    private String password;
 
 
 
-  private String bio;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
 
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<PageEntity> pages;
+    private String bio;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<Post> posts;
+    @Pattern(regexp = "^(https?://)?(www\\.)?(facebook\\.com|fb\\.com)/.*$", message = "Facebook link must be a valid Facebook URL")
+    private String facebookLink;
 
-  @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL ,  orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<Token> tokens;
+    @Pattern(regexp = "^(https?://)?(www\\.)?(linkedin\\.com)/.*$", message = "LinkedIn link must be a valid LinkedIn URL")
+    private String linkedinLink;
+
+    @Pattern(regexp = "^(https?://)?(www\\.)?(t\\.me|telegram\\.me)/.*$", message = "Telegram link must be a valid Telegram URL")
+    private String telegramLink;
+
+    @Pattern(regexp = "^(https?://)?(wa\\.me|api\\.whatsapp\\.com)/.*$", message = "WhatsApp link must be a valid WhatsApp URL")
+    private String whatsappLink;
 
 
-  @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
-  private List<Follow> following;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PageEntity> pages;
 
-  @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
-  private List<Follow> followers;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Post> posts;
+
+    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL ,  orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Token> tokens;
+
+
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+    private List<Follow> following;
+
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+    private List<Follow> followers;
 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<LikeOnComment> likeOnComments;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  @JsonIgnore
-  private List<SaveEntity> saves;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<SaveEntity> saves;
 
-  private boolean enabled  ;
-
-
-  private String otp;
-  private String resetPasswordOtp;
+    private boolean enabled  ;
 
 
-  @Builder.Default()  private Integer resetPasswordOtpAttempts =0  ;
-  @Builder.Default()  private Integer numberOfresetPasswordOtpSending =0  ;
-
-  @Builder.Default()  private LocalDateTime otpExpirationTime= LocalDateTime.now().minusMinutes(10)   ;
-
-  @Builder.Default()  private LocalDateTime maxTimeToResetPassword= LocalDateTime.now().minusMinutes(10)   ;
-
-  @Builder.Default()  private LocalDateTime resetPasswordOtpExpirationTime = LocalDateTime.now().minusMinutes(10)   ;
-  @Builder.Default()  private LocalDateTime resetPasswordOTPSendingBanTime = LocalDateTime.now().minusMinutes(10)   ;
+    private String otp;
+    private String resetPasswordOtp;
 
 
-  @Builder.Default()  private Integer numberOfOtpSending  =0 ;
-  @Builder.Default()  private Integer attempts =0  ;
-  @Builder.Default()  private LocalDateTime lastOtpSentAt = LocalDateTime.now().minusMinutes(10)    ;
-  @Builder.Default()  private LocalDateTime lastResetPasswordOTPSentAt = LocalDateTime.now().minusMinutes(10)  ;
-  @Builder.Default()  private LocalDateTime OTPSendingBanTime = LocalDateTime.now().minusMinutes(10)    ;
+    @Builder.Default()  private Integer resetPasswordOtpAttempts =0  ;
+    @Builder.Default()  private Integer numberOfresetPasswordOtpSending =0  ;
+
+    @Builder.Default()  private LocalDateTime otpExpirationTime= LocalDateTime.now().minusMinutes(10)   ;
+
+    @Builder.Default()  private LocalDateTime maxTimeToResetPassword= LocalDateTime.now().minusMinutes(10)   ;
+
+    @Builder.Default()  private LocalDateTime resetPasswordOtpExpirationTime = LocalDateTime.now().minusMinutes(10)   ;
+    @Builder.Default()  private LocalDateTime resetPasswordOTPSendingBanTime = LocalDateTime.now().minusMinutes(10)   ;
+
+
+    @Builder.Default()  private Integer numberOfOtpSending  =0 ;
+    @Builder.Default()  private Integer attempts =0  ;
+    @Builder.Default()  private LocalDateTime lastOtpSentAt = LocalDateTime.now().minusMinutes(10)    ;
+    @Builder.Default()  private LocalDateTime lastResetPasswordOTPSentAt = LocalDateTime.now().minusMinutes(10)  ;
+    @Builder.Default()  private LocalDateTime OTPSendingBanTime = LocalDateTime.now().minusMinutes(10)    ;
 
 
 
-  @Override
-  public Collection<? extends GrantedAuthority> getAuthorities() {
-    return role.getAuthorities();
-  }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return role.getAuthorities();
+    }
 
-  @Override
-  public String getPassword() {
-    return password;
-  }
+    @Override
+    public String getPassword() {
+        return password;
+    }
 
-  @Override
-  public String getUsername() {
-    return email;
-  }
+    @Override
+    public String getUsername() {
+        return email;
+    }
 
-  @Override
-  public boolean isAccountNonExpired() {
-    return true;
-  }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-  @Override
-  public boolean isAccountNonLocked() {
-    return true;
-  }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
-  @Override
-  public boolean isCredentialsNonExpired() {
-    return true;
-  }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
-  @Override
-  public boolean isEnabled() {
-    return this.enabled;
-  }
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 
-  public void setEnabled(boolean  x ) {
+    public void setEnabled(boolean  x ) {
      this.enabled =x ;
-  }
+    }
 }

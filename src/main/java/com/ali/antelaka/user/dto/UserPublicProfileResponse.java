@@ -8,7 +8,13 @@ public class UserPublicProfileResponse {
     private Integer id;
     private String firstname;
     private String lastname;
+
     private String bio;
+    private String whatsappLink;
+    private String facebookLink;
+    private String telegramLink;
+    private String linkedinLink;
+
     private String imagePath;
     private String role;
 
