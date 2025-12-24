@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,9 @@ public class UserController {
 
     @Autowired
     private OtpService otpService;
+
+    @Value("${server_file_url}")
+    private String serverFileUrl;
 
     @PutMapping("/updateuserinfo")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
@@ -121,44 +125,53 @@ public class UserController {
     }
 
     @PostMapping("/changeprofileimage")
-    public ResponseEntity<?> changeprofileimage (
-            @RequestParam("file") List<MultipartFile> files ,
+    public ResponseEntity<?> changeprofileimage(
+            @RequestParam(value = "file", required = false) List<MultipartFile> files,
             Principal connectedUser
-
     ) throws IOException {
 
+        var user = userRepository.findByEmail(connectedUser.getName())
+                .orElseThrow();
 
-        List<String> storedFiles = fileStorageService.saveFiles(files);
+        Map<String, Object> m = new HashMap<>();
 
-        var user = this.userRepository.findByEmail(connectedUser.getName()).orElseThrow() ;
-        if (user.getImagePath() != null ){
-            fileStorageService.deleteFile(user.getImagePath()) ;
-        }
+         if (files == null || files.isEmpty()) {
 
-        Map m = new HashMap() ;
-        if (!storedFiles.isEmpty()){
-            user.setImagePath(storedFiles.get(0));
-            m.put("imgPath" ,storedFiles.get(0) ) ;
-        }
-        else {
+            if (user.getImagePath() != null) {
+                fileStorageService.deleteIfLocalImage(user.getImagePath(), serverFileUrl);
+            }
+
             user.setImagePath(null);
-            m.put("imgPath" , null ) ;
+            m.put("imgPath", null);
         }
 
+        else {
+            MultipartFile file = files.get(0);
 
-        this.userRepository.save(user) ;
+            if (!file.isEmpty()) {
+                List<String> storedFiles = fileStorageService.saveFiles(List.of(file));
+
+                if (user.getImagePath() != null) {
+                    fileStorageService.deleteIfLocalImage(user.getImagePath() , serverFileUrl);
+                }
+
+                user.setImagePath(serverFileUrl +storedFiles.get(0));
+                m.put("imgPath", serverFileUrl + storedFiles.get(0));
+            }
+        }
+
+        userRepository.save(user);
 
         ApiResponse response = ApiResponse.builder()
                 .success(true)
                 .message("update successfully")
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CREATED.value())
-                .data (m)
+                .data(m)
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
 
 
     @PatchMapping

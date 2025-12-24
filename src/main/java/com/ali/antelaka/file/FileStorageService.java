@@ -77,7 +77,19 @@ public class FileStorageService {
         return file.exists() && file.delete();
     }
 
+    public void deleteIfLocalImage(String imagePath , String serverFileUrl) {
 
+        if (imagePath == null || imagePath.isBlank()) {
+            return;
+        }
+
+        if (!imagePath.startsWith(serverFileUrl)) {
+            return;
+        }
+
+        String fileName = imagePath.replace(serverFileUrl, "");
+        deleteFile(fileName);
+    }
     private void validateImage(MultipartFile file) {
 
         if (file.isEmpty()) {
