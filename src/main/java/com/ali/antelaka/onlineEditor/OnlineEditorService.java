@@ -2,6 +2,7 @@ package com.ali.antelaka.onlineEditor;
 
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.user.entity.User;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OnlineEditorService {
 
     private final RestTemplate restTemplate;
@@ -45,6 +47,10 @@ public class OnlineEditorService {
             return runCodeResponse ;
         }
 
+
+        // 1) حذف البيانات القديمة
+        LocalDate today = LocalDate.now();
+        userRunRepository.deleteByUserIdAndDateBefore(user.getId(), today);
         incrementRun(user.getId());
         runCodeResponse.setNumberOfRequestsPerDay(numberOfRequestsPerDay+1);
 
@@ -91,8 +97,6 @@ public class OnlineEditorService {
 
         LocalDate today = LocalDate.now();
 
-        // 1) حذف البيانات القديمة
-        userRunRepository.deleteByUserIdAndDateBefore(userId, today);
 
         // 2) جلب بيانات اليوم إذا موجودة
         UserRun userRun = userRunRepository
