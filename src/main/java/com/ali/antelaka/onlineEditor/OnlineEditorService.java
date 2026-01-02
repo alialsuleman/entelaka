@@ -69,6 +69,9 @@ public class OnlineEditorService {
         runCodeResponse.setMessage((String) postResponse.getBody().get("token"));
         return runCodeResponse ;
     }
+
+
+
     public Map<String, Object> getResult(String token) {
         try {
             ResponseEntity<Map> getResponse = restTemplate.getForEntity(
@@ -76,51 +79,56 @@ public class OnlineEditorService {
                     Map.class
             );
 
-            if (getResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
-                return null;
-            }
-
             Map<String, Object> body = getResponse.getBody();
             if (body == null) return null;
 
-            // قائمة الحقول التي نريد فك ترميزها
-            String[] keysToDecode = {"stdout", "stderr", "compile_output"};
+            // فك الترميز لجميع الحقول الممكنة
+            decodeBase64Safe(body, "stdout");
+            decodeBase64Safe(body, "stderr");
+            decodeBase64Safe(body, "compile_output");
 
-            for (String key : keysToDecode) {
-                decodeBase64Safe(body, key);
+            // إنشاء final_output جاهز للفرونت إند
+            Map<String, Object> statusMap = (Map<String, Object>) body.get("status");
+            Integer statusId = (statusMap != null) ? (Integer) statusMap.get("id") : null;
+
+            String finalOutput = null;
+            if (statusId != null) {
+                switch (statusId) {
+                    case 3: // Accepted
+                        finalOutput = (String) body.get("stdout");
+                        break;
+                    case 6: // Compilation Error
+                        finalOutput = (String) body.get("compile_output");
+                        break;
+                    default:
+                        finalOutput = (String) body.get("stderr");
+                }
             }
+            body.put("final_output", finalOutput);
 
             return body;
 
         } catch (HttpClientErrorException.NotFound e) {
-            return null; // التوكين غير صحيح
+            return null;
         } catch (Exception e) {
-            throw e; // أي خطأ آخر يتم تمريره إلى الـ controller
+            throw e;
         }
     }
 
-    /**
-     * يحاول فك ترميز Base64 للحقل إذا كان موجودًا وصالحًا.
-     */
     private void decodeBase64Safe(Map<String, Object> body, String key) {
         Object value = body.get(key);
-
-        // تجاهل الحقول غير الموجودة أو null
         if (value == null) return;
-
-        // إذا الحقل ليس نص → تجاهل
         if (!(value instanceof String encoded)) return;
-
-        // تجاهل النصوص الفارغة أو تحتوي فقط على مسافات
         if (encoded.isBlank()) return;
 
         try {
             byte[] decodedBytes = Base64.getDecoder().decode(encoded.trim());
             body.put(key, new String(decodedBytes, StandardCharsets.UTF_8));
         } catch (IllegalArgumentException e) {
-            // النص ليس Base64 صالح → اتركه كما هو
+            // ليست Base64 → اتركها كما هي
         }
     }
+
 
 
     public int incrementRun(Integer userId) {
