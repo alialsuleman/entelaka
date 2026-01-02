@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -110,59 +111,84 @@ public class OnlineEditorController {
         try {
             Map<String, Object> result = editorService.getResult(token);
 
-            // إذا لم يعد شيء → التوكين غير موجود
+            // 1️⃣ التوكين غير موجود
             if (result == null) {
-                ApiResponse<Map<String, Object>> res = ApiResponse.<Map<String, Object>>builder()
-                        .success(false)
-                        .message("Invalid token or submission not found.")
-                        .timestamp(LocalDateTime.now())
-                        .status(HttpStatus.NOT_FOUND.value())
-                        .data(null)
-                        .build();
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        ApiResponse.<Map<String, Object>>builder()
+                                .success(false)
+                                .message("Invalid token or submission not found.")
+                                .timestamp(LocalDateTime.now())
+                                .status(HttpStatus.NOT_FOUND.value())
+                                .data(null)
+                                .build()
+                );
             }
 
-            // جلب status.id من النتيجة
-            Map statusMap = (Map) result.get("status");
-            Integer statusId = (statusMap != null) ? (Integer) statusMap.get("id") : null;
+            // 2️⃣ قراءة status بأمان
+            Integer statusId = extractStatusId(result);
 
-            // إذا التنفيذ لم يكتمل بعد (status 1 = In Queue, 2 = Processing)
+            // 3️⃣ التنفيذ لم يكتمل بعد
             if (statusId != null && (statusId == 1 || statusId == 2)) {
-                ApiResponse<Map<String, Object>> res = ApiResponse.<Map<String, Object>>builder()
-                        .success(true)
-                        .message("Execution is still running. Try again later.")
-                        .timestamp(LocalDateTime.now())
-                        .status(HttpStatus.ACCEPTED.value()) // 202
-                        .data(result)
-                        .build();
-
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(res);
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                        ApiResponse.<Map<String, Object>>builder()
+                                .success(true)
+                                .message("Execution is still running. Try again later.")
+                                .timestamp(LocalDateTime.now())
+                                .status(HttpStatus.ACCEPTED.value())
+                                .data(result)
+                                .build()
+                );
             }
 
-            // إذا التنفيذ مكتمل → أعد النتيجة
-            ApiResponse<Map<String, Object>> res = ApiResponse.<Map<String, Object>>builder()
-                    .success(true)
-                    .message("Execution result fetched")
-                    .timestamp(LocalDateTime.now())
-                    .status(HttpStatus.OK.value())
-                    .data(result)
-                    .build();
+            // 4️⃣ التنفيذ مكتمل
+            return ResponseEntity.ok(
+                    ApiResponse.<Map<String, Object>>builder()
+                            .success(true)
+                            .message("Execution result fetched.")
+                            .timestamp(LocalDateTime.now())
+                            .status(HttpStatus.OK.value())
+                            .data(result)
+                            .build()
+            );
 
-            return ResponseEntity.ok(res);
+        } catch (HttpClientErrorException e) {
+            // خطأ قادم من Judge0
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
+                    ApiResponse.<Map<String, Object>>builder()
+                            .success(false)
+                            .message("Judge0 error: " + e.getResponseBodyAsString())
+                            .timestamp(LocalDateTime.now())
+                            .status(HttpStatus.BAD_GATEWAY.value())
+                            .data(null)
+                            .build()
+            );
 
         } catch (Exception e) {
-            ApiResponse<Map<String, Object>> res = ApiResponse.<Map<String, Object>>builder()
-                    .success(false)
-                    .message("Error fetching result: " + e.getMessage())
-                    .timestamp(LocalDateTime.now())
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .data(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+            // خطأ داخلي حقيقي
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<Map<String, Object>>builder()
+                            .success(false)
+                            .message("Internal server error.")
+                            .timestamp(LocalDateTime.now())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .data(null)
+                            .build()
+            );
         }
     }
 
 
+    @SuppressWarnings("unchecked")
+    private Integer extractStatusId(Map<String, Object> result) {
+        try {
+            Map<String, Object> statusMap = (Map<String, Object>) result.get("status");
+            if (statusMap == null) return null;
+            Object id = statusMap.get("id");
+            return (id instanceof Number) ? ((Number) id).intValue() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
 
     private static final List<Map<String, Object>> LANGUAGES = List.of(

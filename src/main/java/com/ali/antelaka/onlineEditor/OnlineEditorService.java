@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,29 +70,38 @@ public class OnlineEditorService {
         return runCodeResponse ;
     }
 
-    // جلب نتيجة التنفيذ باستخدام token
     public Map<String, Object> getResult(String token) {
         try {
             ResponseEntity<Map> getResponse = restTemplate.getForEntity(
-                    judge0Url + "/submissions/" + token,
+                    judge0Url + "/submissions/" + token + "?base64_encoded=true",
                     Map.class
             );
 
-            // إذا 404 → التوكين غير موجود
             if (getResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
                 return null;
             }
 
-            return getResponse.getBody();
+            Map<String, Object> body = getResponse.getBody();
+
+            decodeIfPresent(body, "stdout");
+            decodeIfPresent(body, "stderr");
+            decodeIfPresent(body, "compile_output");
+
+            return body;
 
         } catch (HttpClientErrorException.NotFound e) {
-            return null; // التوكين غير صحيح
-        } catch (Exception e) {
-            throw e; // سيتم التعامل معه في الـ controller
+            return null;
         }
     }
 
-
+    private void decodeIfPresent(Map<String, Object> body, String key) {
+        if (body.get(key) instanceof String encoded) {
+            body.put(
+                    key,
+                    new String(Base64.getDecoder().decode(encoded), StandardCharsets.UTF_8)
+            );
+        }
+    }
 
 
     public int incrementRun(Integer userId) {
