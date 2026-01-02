@@ -122,12 +122,16 @@ public class OnlineEditorService {
         if (encoded.isBlank()) return;
 
         try {
-            byte[] decodedBytes = Base64.getDecoder().decode(encoded.trim());
+            // إزالة أي أسطر جديدة أو مسافات غير مرغوب فيها قبل فك الترميز
+            String cleaned = encoded.replaceAll("\\s+", "");
+            byte[] decodedBytes = Base64.getDecoder().decode(cleaned);
             body.put(key, new String(decodedBytes, StandardCharsets.UTF_8));
         } catch (IllegalArgumentException e) {
-            // ليست Base64 → اتركها كما هي
+            // ليست Base64 صالح → اتركها كما هي
         }
     }
+
+
 
 
 
