@@ -95,13 +95,21 @@ public class OnlineEditorService {
     }
 
     private void decodeIfPresent(Map<String, Object> body, String key) {
-        if (body.get(key) instanceof String encoded) {
-            body.put(
-                    key,
-                    new String(Base64.getDecoder().decode(encoded), StandardCharsets.UTF_8)
-            );
+        try {
+            Object value = body.get(key);
+
+            if (value == null) return;
+            if (!(value instanceof String encoded)) return;
+            if (encoded.isBlank()) return;
+
+            byte[] decodedBytes = Base64.getDecoder().decode(encoded);
+            body.put(key, new String(decodedBytes, StandardCharsets.UTF_8));
+
+        } catch (IllegalArgumentException e) {
+            // ليست Base64 → اتركها كما هي
         }
     }
+
 
 
     public int incrementRun(Integer userId) {
