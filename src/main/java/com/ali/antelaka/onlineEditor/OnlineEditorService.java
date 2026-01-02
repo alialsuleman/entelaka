@@ -69,7 +69,6 @@ public class OnlineEditorService {
         runCodeResponse.setMessage((String) postResponse.getBody().get("token"));
         return runCodeResponse ;
     }
-
     public Map<String, Object> getResult(String token) {
         try {
             ResponseEntity<Map> getResponse = restTemplate.getForEntity(
@@ -82,34 +81,46 @@ public class OnlineEditorService {
             }
 
             Map<String, Object> body = getResponse.getBody();
+            if (body == null) return null;
 
-            decodeIfPresent(body, "stdout");
-            decodeIfPresent(body, "stderr");
-            decodeIfPresent(body, "compile_output");
+            // قائمة الحقول التي نريد فك ترميزها
+            String[] keysToDecode = {"stdout", "stderr", "compile_output"};
+
+            for (String key : keysToDecode) {
+                decodeBase64Safe(body, key);
+            }
 
             return body;
 
         } catch (HttpClientErrorException.NotFound e) {
-            return null;
+            return null; // التوكين غير صحيح
+        } catch (Exception e) {
+            throw e; // أي خطأ آخر يتم تمريره إلى الـ controller
         }
     }
 
-    private void decodeIfPresent(Map<String, Object> body, String key) {
+    /**
+     * يحاول فك ترميز Base64 للحقل إذا كان موجودًا وصالحًا.
+     */
+    private void decodeBase64Safe(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+
+        // تجاهل الحقول غير الموجودة أو null
+        if (value == null) return;
+
+        // إذا الحقل ليس نص → تجاهل
+        if (!(value instanceof String encoded)) return;
+
+        // تجاهل النصوص الفارغة أو تحتوي فقط على مسافات
+        if (encoded.isBlank()) return;
+
         try {
-            Object value = body.get(key);
-
-            if (value == null) return;
-            if (!(value instanceof String encoded)) return;
-            if (encoded.isBlank()) return;
-
-            byte[] decodedBytes = Base64.getDecoder().decode(encoded);
+            byte[] decodedBytes = Base64.getDecoder().decode(encoded.trim());
             body.put(key, new String(decodedBytes, StandardCharsets.UTF_8));
-
         } catch (IllegalArgumentException e) {
-            // ليست Base64 → اتركها كما هي
+            // النص ليس Base64 صالح → اتركه كما هو
         }
     }
-
 
 
     public int incrementRun(Integer userId) {
