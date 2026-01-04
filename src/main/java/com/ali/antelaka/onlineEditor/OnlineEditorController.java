@@ -194,13 +194,10 @@ public class OnlineEditorController {
 
             // Java
             Map.of("id", 62, "name", "Java (OpenJDK 8)"),
-            Map.of("id", 91, "name", "Java (OpenJDK 11)"),
-            Map.of("id", 96, "name", "Java (OpenJDK 17)"),
+
 
             // JavaScript
             Map.of("id", 63, "name", "JavaScript (Node.js 14)"),
-            Map.of("id", 93, "name", "JavaScript (Node.js 16)"),
-            Map.of("id", 102, "name", "JavaScript (Node.js 18)"),
 
             // TypeScript
             Map.of("id", 74, "name", "TypeScript (3.9)"),
@@ -210,27 +207,23 @@ public class OnlineEditorController {
             // Python
             Map.of("id", 70, "name", "Python (2.7)"),
             Map.of("id", 71, "name", "Python (3.8)"),
-            Map.of("id", 92, "name", "Python (3.10)"),
+
 
             // C
             Map.of("id", 50, "name", "C (GCC 9.2.0)"),
-            Map.of("id", 103, "name", "C (GCC 14.1.0)"),
-            Map.of("id", 104, "name", "C (Clang 18.1.8)"),
+
+       
 
             // C++
             Map.of("id", 54, "name", "C++ (GCC 9.2.0)"),
-            Map.of("id", 105, "name", "C++ (GCC 14.1.0)"),
             Map.of("id", 76, "name", "C++ (Clang 7.0.1)"),
 
             // C#
             Map.of("id", 51, "name", "C# (Mono 6.6.0)"),
-            Map.of("id", 87, "name", "C# (.NET Core 3.1)"),
-            Map.of("id", 99, "name", "C# (.NET 6.0)"),
 
             // PHP
-            Map.of("id", 68, "name", "PHP (7.4)"),
-            Map.of("id", 95, "name", "PHP (8.0)"),
-            Map.of("id", 100, "name", "PHP (8.2)")
+            Map.of("id", 68, "name", "PHP (7.4)")
+
     );
 
 
