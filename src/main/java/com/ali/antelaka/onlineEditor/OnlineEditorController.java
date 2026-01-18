@@ -212,7 +212,7 @@ public class OnlineEditorController {
             // C
             Map.of("id", 50, "name", "C (GCC 9.2.0)"),
 
-       
+
 
             // C++
             Map.of("id", 54, "name", "C++ (GCC 9.2.0)"),

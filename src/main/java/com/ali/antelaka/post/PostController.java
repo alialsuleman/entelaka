@@ -4,6 +4,7 @@ package com.ali.antelaka.post;
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.post.DTO.CommentDTO;
+import com.ali.antelaka.post.DTO.CommentHistoryDTO;
 import com.ali.antelaka.post.DTO.PostDTO;
 import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.Post;
@@ -648,16 +649,44 @@ public class PostController {
 
 
 
+//    @GetMapping("/commenthistory")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+//    public ResponseEntity<ApiResponse<?>> getUserCommentHistory(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size ,
+//            Principal connectedUser
+//    ) {
+//        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+//        var history = postService.getUserCommentHistory(user.getId(), page, size);
+//
+//        ApiResponse<?> response = ApiResponse.builder()
+//                .success(true)
+//                .message("User comment history fetched successfully")
+//                .status(200)
+//                .timestamp(LocalDateTime.now())
+//                .data(history)
+//                .build();
+//
+//        return ResponseEntity.ok(response);
+//    }
+
     @GetMapping("/commenthistory")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse<?>> getUserCommentHistory(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size ,
+            @RequestParam(defaultValue = "10") int size,
             Principal connectedUser
     ) {
+        // الحصول على المستخدم الحالي
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        var history = postService.getUserCommentHistory(user.getId(), page, size);
 
+        // الحصول على سجل التعليقات
+        Page<CommentHistoryDTO> history = postService.getUserCommentHistory(user.getId(), page, size);
+
+        // إضافة معلومات المتابعة إذا كانت مطلوبة
+        // (يمكن إضافة هذا المنطق في الـ Service أو هنا)
+
+        // بناء الرد
         ApiResponse<?> response = ApiResponse.builder()
                 .success(true)
                 .message("User comment history fetched successfully")
@@ -667,6 +696,12 @@ public class PostController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    // يمكن إضافة هذا النمط لمعرفة إذا كان المستخدم يتابع الآخرين
+    private void addFollowingInfo(List<CommentHistoryDTO> dtos, User currentUser) {
+        // يمكن تنفيذ منطق المتابعة هنا
+        // مثلاً: التحقق من قاعدة البيانات إذا كان currentUser يتابع كل مستخدم
     }
 
 

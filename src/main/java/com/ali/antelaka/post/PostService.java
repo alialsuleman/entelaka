@@ -3,28 +3,22 @@ package com.ali.antelaka.post;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
-import com.ali.antelaka.post.DTO.CommentDTO;
-import com.ali.antelaka.post.DTO.CommentHistoryDTO;
-import com.ali.antelaka.post.DTO.PostDTO;
-import com.ali.antelaka.post.DTO.PostSummaryDTO;
+import com.ali.antelaka.post.DTO.*;
 import com.ali.antelaka.post.entity.*;
 import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -415,56 +409,167 @@ public class PostService {
 
 
 
-    public Page<CommentHistoryDTO> getUserCommentHistory(Integer userId, int page, int size) {
+//    public Page<CommentHistoryDTO> getUserCommentHistory(Integer userId, int page, int size) {
+//
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+//
+//        Page<Comment> comments = commentRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
+//
+//        return comments.map(this::convertToHistoryDTO);
+//    }
 
+
+
+
+
+
+
+    public Page<CommentHistoryDTO> getUserCommentHistory(Integer userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Page<Comment> comments = commentRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
+        // 1. جلب تعليقات المستخدم فقط
+        Page<Comment> userComments = commentRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
 
-        return comments.map(this::convertToHistoryDTO);
+        // 2. إذا لم توجد تعليقات
+        if (userComments.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. بناء الـ DTOs بشكل مباشر
+        List<CommentHistoryDTO> dtos = new ArrayList<>();
+
+        for (Comment userComment : userComments.getContent()) {
+            CommentHistoryDTO dto = buildCommentHistoryDTO(userComment, userId);
+            dtos.add(dto);
+        }
+
+        return new PageImpl<>(dtos, pageable, userComments.getTotalElements());
     }
 
-    private CommentHistoryDTO convertToHistoryDTO(Comment c) {
+    private CommentHistoryDTO buildCommentHistoryDTO(Comment userComment, Integer currentUserId) {
+        // 1. بناء الفرع (branch) لهذا التعليق
+        List<Comment> branch = buildCommentBranch(userComment);
 
-        Post post = c.getPost();
-        User publisher = post.getUser();
+        // 2. تحويل الفرع إلى DTO
+        return CommentHistoryDTO.builder()
+                .myCommentId(userComment.getId())
+                .myCommentText(userComment.getText())
+                .myCommentCreatedAt(userComment.getCreatedAt())
+                .myCommentUpdatedAt(userComment.getUpdatedAt())
+                .myCommentLikes(userComment.getNumberOfLikes())
+                .myCommentReplies(userComment.getNumberOfSubComment())
 
-        // text snippet
-        String snippet = (post.getText() != null && post.getText().length() > 120)
-                ? post.getText().substring(0, 120) + "..."
-                : post.getText();
+                // تعيين المستويات
+                .commentLevel1(convertToCommentLevelDTO(branch.get(0), currentUserId))
+                .commentLevel2(convertToCommentLevelDTO(branch.get(1), currentUserId))
+                .commentLevel3(convertToCommentLevelDTO(branch.get(2), currentUserId))
 
-        // publisher info
+                .postSummaryDTO(convertToPostSummaryDTO(userComment.getPost()))
+                .totalLevels((int) branch.stream().filter(Objects::nonNull).count())
+                .isRootComment(userComment.getCommentParent() == null)
+                .build();
+    }
 
+    private List<Comment> buildCommentBranch(Comment userComment) {
+        List<Comment> branch = new ArrayList<>();
+
+        // نبدأ من تعليق المستخدم
+        branch.add(userComment);
+
+        // الحصول على الأب (إذا وجد)
+        if (userComment.getCommentParent() != null) {
+            Comment parent = getCommentWithDetails(userComment.getCommentParent().getId());
+            branch.add(0, parent); // إضافة الأب في البداية
+
+            // الحصول على الجد (إذا وجد)
+            if (parent != null && parent.getCommentParent() != null) {
+                Comment grandParent = getCommentWithDetails(parent.getCommentParent().getId());
+                branch.add(0, grandParent); // إضافة الجد في البداية
+            }
+        }
+
+        // نضمن أن لدينا 3 عناصر (قد تكون بعضها null)
+        while (branch.size() < 3) {
+            branch.add( null);
+        }
+
+        return branch;
+    }
+
+    private Comment getCommentWithDetails(Integer commentId) {
+        if (commentId == null || commentId == 0) {
+            return null;
+        }
+
+        // جلب التعليق مع تفاصيل المستخدم والمنشور
+        return commentRepository.findCommentWithDetails(commentId).orElse(null);
+    }
+
+    private CommentLevelDTO convertToCommentLevelDTO(Comment comment, Integer currentUserId) {
+        if (comment == null) {
+            return null;
+        }
+
+        User user = comment.getUser();
+        if (user == null) {
+            return null;
+        }
         String name = "";
-        if ( publisher.getFirstname()  != null )
+        if ( user.getFirstname()  != null )
         {
-            name+= publisher.getFirstname() ;
+            name+= user.getFirstname() ;
         }
-        if (publisher.getLastname()!=  null)
+        if ( user.getLastname()!=  null)
         {
-            name += " " +  publisher.getLastname() ;
+            name += " " +  user.getLastname() ;
         }
-        String publisherName =name ;
-        String publisherAvatar = publisher != null ? publisher.getImagePath() : null;
 
+        UserInfoDTO ownerInfo = UserInfoDTO.builder()
+                .userId(user.getId())
+                .username(name)
+                .userImagePath(user.getImagePath())
+                .me(user.getId().equals(currentUserId))
+                .iFollowingHim(false) // يمكن إضافة منطق المتابعة لاحقاً
+                .build();
 
-
-        PostSummaryDTO postSummaryDTO = new PostSummaryDTO(
-                post.getId(),
-                snippet,
-                publisherName,
-                publisherAvatar
-        );
-
-        return new CommentHistoryDTO(
-                c.getId(),
-                c.getText(),
-                c.getCreatedAt(),
-                c.getCommentParent() != null ? c.getCommentParent().getId() : null,
-                postSummaryDTO
-        );
+        return CommentLevelDTO.builder()
+                .id(comment.getId())
+                .text(comment.getText())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .repliedUserId(comment.getRepliedUserId())
+                .repliedUsername(comment.getRepliedUsername())
+                .numberOfLikes(comment.getNumberOfLikes())
+                .numberOfSubComment(comment.getNumberOfSubComment())
+                .commentOwner(ownerInfo)
+                .build();
     }
+
+    private PostSummaryDTO convertToPostSummaryDTO(Post post) {
+        if (post == null) {
+            return null;
+        }
+
+        String content = post.getText();
+        String textSnippet = content;
+
+        if (content != null && content.length() > 50) {
+            textSnippet = content.substring(0, 50) + "...";
+        }
+
+        User publisher = post.getUser();
+        return PostSummaryDTO.builder()
+                .id(post.getId())
+                .textSnippet(textSnippet)
+                .publisherName(publisher != null ? publisher.getUsername() : "Unknown")
+                .publisherAvatar(publisher != null ? publisher.getImagePath() : null)
+                .build();
+    }
+
+
+
+
+
 }
 
 
