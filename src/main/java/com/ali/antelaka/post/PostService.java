@@ -19,6 +19,8 @@ import javax.naming.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 public class PostService {
@@ -439,61 +441,67 @@ public class PostService {
         List<CommentHistoryDTO> dtos = new ArrayList<>();
 
         for (Comment userComment : userComments.getContent()) {
-            CommentHistoryDTO dto = buildCommentHistoryDTO(userComment, userId);
+            CommentHistoryDTO dto = buildHistoryItem(userComment, userId);
             dtos.add(dto);
         }
 
         return new PageImpl<>(dtos, pageable, userComments.getTotalElements());
     }
 
-    private CommentHistoryDTO buildCommentHistoryDTO(Comment userComment, Integer currentUserId) {
-        // 1. بناء الفرع (branch) لهذا التعليق
-        List<Comment> branch = buildCommentBranch(userComment);
+    private CommentHistoryDTO buildHistoryItem (Comment userComment, Integer userId) {
 
-        // 2. تحويل الفرع إلى DTO
+        List<Comment> ancestors = buildCommentBranch(userComment);
+
+        List<CommentAncestorDTO> ancestorDTOs = IntStream
+                .range(0, ancestors.size())
+                .mapToObj(i -> convertToAncestorDTO(ancestors.get(i), i + 1))
+                .toList();
+
         return CommentHistoryDTO.builder()
-                .myCommentId(userComment.getId())
-                .myCommentText(userComment.getText())
-                .myCommentCreatedAt(userComment.getCreatedAt())
-                .myCommentUpdatedAt(userComment.getUpdatedAt())
-                .myCommentLikes(userComment.getNumberOfLikes())
-                .myCommentReplies(userComment.getNumberOfSubComment())
-
-                // تعيين المستويات
-                .commentLevel1(convertToCommentLevelDTO(branch.get(0), currentUserId))
-                .commentLevel2(convertToCommentLevelDTO(branch.get(1), currentUserId))
-                .commentLevel3(convertToCommentLevelDTO(branch.get(2), currentUserId))
-
-                .postSummaryDTO(convertToPostSummaryDTO(userComment.getPost()))
-                .totalLevels((int) branch.stream().filter(Objects::nonNull).count())
-                .isRootComment(userComment.getCommentParent() == null)
+                .post(convertToPostSummaryDTO(userComment.getPost()))
+                .myComment(convertToMyCommentDTO(userComment, ancestors.size() + 1))
+                .ancestors(ancestorDTOs)
+                .hasDeeperParent(!ancestors.isEmpty())
                 .build();
     }
 
-    private List<Comment> buildCommentBranch(Comment userComment) {
-        List<Comment> branch = new ArrayList<>();
-
-        // نبدأ من تعليق المستخدم
-        branch.add(userComment);
-
-        // الحصول على الأب (إذا وجد)
-        if (userComment.getCommentParent() != null) {
-            Comment parent = getCommentWithDetails(userComment.getCommentParent().getId());
-            branch.add(0, parent); // إضافة الأب في البداية
-
-            // الحصول على الجد (إذا وجد)
-            if (parent != null && parent.getCommentParent() != null) {
-                Comment grandParent = getCommentWithDetails(parent.getCommentParent().getId());
-                branch.add(0, grandParent); // إضافة الجد في البداية
-            }
+    private CommentAncestorDTO convertToAncestorDTO(Comment comment, int uiLevel) {
+        if (comment == null || comment.getUser() == null) {
+            return null;
         }
 
-        // نضمن أن لدينا 3 عناصر (قد تكون بعضها null)
-        while (branch.size() < 3) {
-            branch.add( null);
-        }
+        User user = comment.getUser();
 
-        return branch;
+        String name = Stream.of(user.getFirstname(), user.getLastname())
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" "));
+
+        UserInfoDTO owner = UserInfoDTO.builder()
+                .userId(user.getId())
+                .username(name)
+                .userImagePath(user.getImagePath())
+                .me(false)              // ancestor ≠ current user غالباً
+                .iFollowingHim(false)   // يمكن تحسينها لاحقاً
+                .build();
+
+        return CommentAncestorDTO.builder()
+                .id(comment.getId())
+                .uiLevel(uiLevel)
+                .text(comment.getText())
+                .createdAt(comment.getCreatedAt())
+                .owner(owner)
+                .build();
+    }
+
+    private List<Comment> buildCommentBranch(Comment comment) {
+        List<Comment> ancestors = new ArrayList<>();
+        Comment current = comment.getCommentParent();
+
+        while (current != null) {
+            ancestors.add(0, getCommentWithDetails(current.getId()));
+            current = current.getCommentParent();
+        }
+        return ancestors;
     }
 
     private Comment getCommentWithDetails(Integer commentId) {
@@ -563,6 +571,22 @@ public class PostService {
                 .textSnippet(textSnippet)
                 .publisherName(publisher != null ? publisher.getUsername() : "Unknown")
                 .publisherAvatar(publisher != null ? publisher.getImagePath() : null)
+                .build();
+    }
+    private MyCommentDTO convertToMyCommentDTO(Comment comment, int uiLevel) {
+        return MyCommentDTO.builder()
+                .id(comment.getId())
+                .text(comment.getText())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .likes(comment.getNumberOfLikes())
+                .replies(comment.getNumberOfSubComment())
+                .uiLevel(uiLevel)
+                .replyToCommentId(
+                        comment.getCommentParent() != null
+                                ? comment.getCommentParent().getId()
+                                : null
+                )
                 .build();
     }
 
