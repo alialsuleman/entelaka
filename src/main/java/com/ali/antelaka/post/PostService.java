@@ -1,6 +1,9 @@
 package com.ali.antelaka.post;
 
 import com.ali.antelaka.follow.FollowRepository;
+import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.service.NotificationService;
+import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.post.DTO.*;
@@ -10,12 +13,10 @@ import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,6 +52,9 @@ public class PostService {
 
     @Autowired
     private UserRepository userRepository ;
+
+    @Autowired
+    private NotificationService notificationService ;
 
     public Optional<Post> getPostById(Integer postId)
     {
@@ -128,6 +132,18 @@ public class PostService {
             this.likeRepository.save(like) ;
             post.setNumberOfLikes(post.getNumberOfLikes()   + 1  ) ;
             this.postRepository.save(post) ;
+
+            if (!post.getUser().getId().equals(user.getId())) {
+                NotificationRequest request = NotificationRequest.builder()
+                        .userId(post.getUser().getId())
+                        .senderId(user.getId())
+                        .type(NotificationType.POST_LIKE)
+                        .entityId(postId)
+                        .entityContent(post.getText())
+                        .build();
+
+                notificationService.createNotification(request);
+            }
         }
         return true ;
     }
@@ -194,6 +210,20 @@ public class PostService {
             this.commentRepository.save(parentComment) ;
 
             inc =0 ;
+
+//            if (!parentComment.getUser().getId().equals(user.getId())) {
+//                NotificationRequest request = NotificationRequest.builder()
+//                        .userId(parentComment.getUser().getId()) // صاحب التعليق
+//                        .senderId(user.getId()) // الراد
+//                        .type(NotificationType.COMMENT_REPLY)
+//                        .entityId(post.getId()) // معرف البوست
+//                        .entityContent(parentComment.getText()) // محتوى التعليق
+//                        .customMessage(createCommentRequest.getText()) // نص الرد (اختياري)
+//                        .build();
+//
+//                notificationService.createNotification(request);
+//            }
+
         }
 
         String name = "";
@@ -216,10 +246,10 @@ public class PostService {
             }
         }
         System.out.println("repliedUserName  : " +  name);
-
-
         var post= o_post.get();
-        var comment = Comment.builder()
+
+
+         var comment = Comment.builder()
                 .post(post)
                 .user(user)
                 .commentParent(parentComment)
@@ -235,6 +265,18 @@ public class PostService {
         post.setNumberOfComment(post.getNumberOfComment() + 1  ); ;
         this.postRepository.save(post) ;
 
+        if (!post.getUser().getId().equals(user.getId())) {
+            NotificationRequest request = NotificationRequest.builder()
+                    .userId(post.getUser().getId()) // صاحب البوست
+                    .senderId(user.getId()) // المعلق
+                    .type(NotificationType.POST_COMMENT)
+                    .entityId(post.getId()) // معرف البوست
+                    .entityContent(post.getText()) // محتوى البوست
+                    .customMessage(comment.getText()) // نص التعليق (اختياري للإشعار)
+                    .build();
+
+            notificationService.createNotification(request);
+        }
         return new CommentDTO(comment) ;
     }
 

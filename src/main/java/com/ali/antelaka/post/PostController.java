@@ -347,6 +347,7 @@ public class PostController {
             res.setStatus(HttpStatus.BAD_REQUEST.value());
             return  ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res) ;
         }
+
         res.setData(commentDTO);
 
         return  ResponseEntity.status(HttpStatus.CREATED.value()).body(res) ;
@@ -649,26 +650,7 @@ public class PostController {
 
 
 
-//    @GetMapping("/commenthistory")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-//    public ResponseEntity<ApiResponse<?>> getUserCommentHistory(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size ,
-//            Principal connectedUser
-//    ) {
-//        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-//        var history = postService.getUserCommentHistory(user.getId(), page, size);
-//
-//        ApiResponse<?> response = ApiResponse.builder()
-//                .success(true)
-//                .message("User comment history fetched successfully")
-//                .status(200)
-//                .timestamp(LocalDateTime.now())
-//                .data(history)
-//                .build();
-//
-//        return ResponseEntity.ok(response);
-//    }
+
 
     @GetMapping("/commenthistory")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")

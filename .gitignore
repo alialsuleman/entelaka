@@ -3,6 +3,10 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+# ملفات Firebase السرية
+src/main/resources/firebase-service-account*.json
+src/main/resources/*-firebase-adminsdk-*.json
+src/main/resources/*service-account*.json
 
 
 
