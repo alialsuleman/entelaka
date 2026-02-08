@@ -1,5 +1,8 @@
 package com.ali.antelaka.follow;
 
+import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.entity.NotificationType;
+import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
 import jakarta.transaction.Transactional;
@@ -18,7 +21,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
-
+    private final NotificationService notificationService ;
     public Page<User> getFollowers(User user, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Follow> follows = followRepository.findByFollowing(user, pageable);
@@ -52,6 +55,18 @@ public class FollowService {
             return follow ;
         }) ;
 
+
+
+        NotificationRequest request = NotificationRequest.builder()
+                .userId(following.getId()) // صاحب البوست
+                .senderId(follower.getId()) // المعلق
+                .type(NotificationType.NEW_FOLLOWER)
+                .entityId(null) // معرف البوست
+                .entityContent(null) // محتوى البوست
+                .customMessage(null) // نص التعليق (اختياري للإشعار)
+                .build();
+
+        notificationService.createNotification(request);
 
 
         return null ;

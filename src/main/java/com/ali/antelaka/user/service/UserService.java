@@ -5,6 +5,9 @@ import com.ali.antelaka.auth.AuthenticationService;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.google.GoogleUser;
 
+import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.entity.NotificationType;
+import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.page.entity.PageType;
 import com.ali.antelaka.page.PageRepository;
@@ -36,6 +39,7 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository repository;
+    private final NotificationService notificationService ;
 
     @Autowired
     FollowRepository followRepository ;
@@ -125,6 +129,20 @@ public class UserService {
         user.setMaxTimeToResetPassword(null);
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         repository.save(user);
+
+
+        NotificationRequest notificationReduest = NotificationRequest.builder()
+                .userId(user.getId()) // صاحب البوست
+                .senderId(user.getId()) // المعلق
+                .type(NotificationType.PASSWORD_CHANGED)
+                .entityId(null) // معرف البوست
+                .entityContent(null) // محتوى البوست
+                .customMessage(null) // نص التعليق (اختياري للإشعار)
+                .build();
+
+        notificationService.createNotification(notificationReduest);
+
+
         return apiRes;
     }
 

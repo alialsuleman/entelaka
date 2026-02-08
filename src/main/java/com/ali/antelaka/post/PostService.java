@@ -277,6 +277,7 @@ public class PostService {
 
             notificationService.createNotification(request);
         }
+
         return new CommentDTO(comment) ;
     }
 
