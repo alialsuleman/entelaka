@@ -26,15 +26,15 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest request) {
-        if (shouldAggregate(request)) {
-            System.out.println("nnnnn");
-
-            var x = handleAggregatedNotification(request);
-            System.out.println("nnnnn");
-            firebaseNotificationService.sendPushNotification(x);
-            return x ;
-
-        }
+//        if (shouldAggregate(request)) {
+//            System.out.println("nnnnn");
+//
+//            var x = handleAggregatedNotification(request);
+//            System.out.println("nnnnn");
+//            firebaseNotificationService.sendPushNotification(x);
+//            return x ;
+//
+//        }
 
         Notification notification = buildNotification(request, false);
         Notification savedNotification = notificationRepository.save(notification);
@@ -173,13 +173,13 @@ public class NotificationService {
             case PASSWORD_CHANGED:
                 return "Your password has been changed successfully";
             case NEW_FOLLOWER:
-                return senderName + " started following you";
+                return " started following you";
             case POST_LIKE:
-                return senderName + " liked your post";
+                return  " liked your post";
             case POST_COMMENT:
-                return senderName + " commented on your post";
+                return  " commented on your post";
             case COMMENT_REPLY:
-                return senderName + " replied to your comment";
+                return  " replied to your comment";
             default:
                 return "You have a new notification";
         }
