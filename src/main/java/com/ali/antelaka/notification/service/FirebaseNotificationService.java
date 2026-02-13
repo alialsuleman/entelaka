@@ -50,7 +50,7 @@ public class FirebaseNotificationService {
             com.google.firebase.messaging.Notification firebaseNotification =
                     com.google.firebase.messaging.Notification.builder()
                             .setTitle(getNotificationTitle(notification.getType()))
-                            .setBody(notification.getMessage())
+                            .setBody(notification.getSenderName() + notification.getMessage())
                             .build();
 
             Message message = Message.builder()
