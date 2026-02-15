@@ -181,7 +181,7 @@ public class NotificationService {
             case COMMENT_REPLY:
                 return  " replied to your comment";
             default:
-                return "You have a new notification";
+                return " You have a new notification";
         }
     }
 

@@ -72,8 +72,9 @@ public class OnlineEditorController {
 
             String sourceCode = (String) payload.get("source_code");
             int languageId = (Integer) payload.get("language_id");
+            String input = (String) payload.get("input");
 
-            RunCodeResponse runCodeResponse = editorService.submitCode(user , sourceCode, languageId);
+            RunCodeResponse runCodeResponse = editorService.submitCode(user , sourceCode, languageId, input);
             Map<String, Object> body = new HashMap<>();
             body.put("numberOfRequestsPerDay", runCodeResponse.getNumberOfRequestsPerDay());
             body.put("maxRunsPerDay", runCodeResponse.getMaxRunsPerDay());

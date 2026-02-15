@@ -52,7 +52,7 @@ public class FirebaseNotificationService {
                             .setTitle(getNotificationTitle(notification.getType()))
                             .setBody(notification.getSenderName() + notification.getMessage())
                             .build();
-
+            System.out.println(notification.getSenderName() + notification.getMessage());
             Message message = Message.builder()
                     .setToken(preference.getFcmToken())
                     .setNotification(firebaseNotification)

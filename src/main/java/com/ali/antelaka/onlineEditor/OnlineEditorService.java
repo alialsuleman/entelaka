@@ -35,7 +35,7 @@ public class OnlineEditorService {
     private String judge0Url;
 
     // إرسال الكود فقط
-    public RunCodeResponse submitCode(User user, String sourceCode, int languageId) {
+    public RunCodeResponse submitCode(User user, String sourceCode, int languageId , String stdin) {
 
         RunCodeResponse runCodeResponse = new RunCodeResponse() ;
         runCodeResponse.setCode(1);
@@ -59,7 +59,9 @@ public class OnlineEditorService {
         Map<String, Object> body = new HashMap<>();
         body.put("source_code", sourceCode);
         body.put("language_id", languageId);
-
+        if (stdin != null && !stdin.isEmpty()) {
+            body.put("stdin", stdin);  // إضافة المدخلات
+        }
         ResponseEntity<Map> postResponse = restTemplate.postForEntity(
                 judge0Url + "/submissions",
                 body,
