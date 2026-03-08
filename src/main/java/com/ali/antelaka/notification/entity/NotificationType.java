@@ -5,5 +5,6 @@ public enum NotificationType {
     NEW_FOLLOWER,
     POST_LIKE,
     POST_COMMENT,
-    COMMENT_REPLY
+    COMMENT_REPLY ,
+     MESSAGE
 }

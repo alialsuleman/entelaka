@@ -1,8 +1,10 @@
 package com.ali.antelaka.notification.controller;
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.notification.entity.ChatNotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationResponse;
+import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,38 @@ import java.time.LocalDateTime;
 public class NotificationController {
 
     private final NotificationService notificationService;
+
+
+
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createNotification(
+            @RequestBody ChatNotificationRequest
+                    request, Principal connectedUser
+            ) {
+        try {
+
+            NotificationRequest request111 = NotificationRequest.builder()
+                    .userId(request.getReceiverId()) // المستقبل
+                    .senderId(request.getSenderId()) // المعلق
+                    .type(NotificationType.MESSAGE)
+                    .entityId(request.getReceiverId()) // معرف المستقبل
+                    .entityContent(request.getText()) // محتوى البوست
+                    .customMessage(null) // نص التعليق (اختياري للإشعار)
+                    .build();
+
+            notificationService.createNotification(request111);
+            // 5. إرجاع استجابة نجاح
+            return ResponseEntity.ok(1);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(1);
+        }
+    }
+
+
+
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getNotifications(

@@ -37,11 +37,12 @@ public class NotificationService {
 //        }
 
         Notification notification = buildNotification(request, false);
+
         Notification savedNotification = notificationRepository.save(notification);
         NotificationResponse response = convertToResponse(savedNotification);
         System.out.println("nnnnn");
         firebaseNotificationService.sendPushNotification(response);
-
+        if (request.getType() ==  NotificationType.MESSAGE)notificationRepository.delete(savedNotification);
         return response;
     }
 
