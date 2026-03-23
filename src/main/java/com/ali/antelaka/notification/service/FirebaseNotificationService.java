@@ -3,6 +3,7 @@ package com.ali.antelaka.notification.service;
  import com.ali.antelaka.notification.entity.NotificationPreferenceRepository;
  import com.ali.antelaka.notification.entity.NotificationResponse;
  import com.ali.antelaka.notification.entity.NotificationType;
+ import com.fasterxml.jackson.databind.ObjectMapper;
  import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
  import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ public class FirebaseNotificationService {
     private final FirebaseMessaging firebaseMessaging;
     private final NotificationPreferenceRepository preferenceRepository;
 
-    public void sendPushNotification(NotificationResponse notification) {
+    public void sendPushNotification(NotificationResponse notification , Map<?, ?> extraData ) {
         try {
             // البحث عن تفضيلات المستخدم
             var preferenceOptional = preferenceRepository.findByUserId(notification.getUserId());
@@ -45,6 +46,15 @@ public class FirebaseNotificationService {
             }else  data.put("entityId", notification.getEntityId() != null ?
                     notification.getEntityId().toString() : "");
             data.put("isAggregated", String.valueOf(notification.isAggregated()));
+
+            if (extraData != null && !extraData.isEmpty()) {
+                // تحويل extraData إلى JSON String
+                ObjectMapper objectMapper = new ObjectMapper();
+                String extraDataJson = objectMapper.writeValueAsString(extraData);
+                data.put("extraData", extraDataJson);
+                System.out.println("Extra data added to push notification: " + extraDataJson);
+            }
+
 
             // إنشاء الإشعار
             com.google.firebase.messaging.Notification firebaseNotification =
@@ -100,7 +110,7 @@ public class FirebaseNotificationService {
             case COMMENT_REPLY:
                 return "New Reply";
             default:
-                return "New Notification";
+                return "New Message";
         }
     }
 }

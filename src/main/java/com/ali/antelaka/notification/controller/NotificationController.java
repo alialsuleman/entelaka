@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/notifications")
@@ -30,24 +32,49 @@ public class NotificationController {
 
 
 
-
-    @PostMapping("/create")
     public ResponseEntity<?> createNotification(
             @RequestBody ChatNotificationRequest
                     request, Principal connectedUser
-            ) {
+    ) {
         try {
+            // إنشاء HashMap لتخزين الـ extraData
+            Map<String, Object> extraData = new HashMap<>();
+
+            // إضافة جميع بيانات الرسالة كاملة إلى extraData
+            extraData.put("id", request.getId());
+            extraData.put("uuid", request.getUuid());
+            extraData.put("sender_id", request.getSenderId());
+            extraData.put("receiver_id", request.getReceiverId());
+            extraData.put("content", request.getText());
+            extraData.put("is_read", request.getIsRead());
+            extraData.put("created_at", request.getCreatedAt());
+            extraData.put("is_delivered", request.getIsDelivered());
+            extraData.put("unread_count", request.getUnreadCount());
+            extraData.put("partner_id", request.getPartnerId());
+            extraData.put("isMine", request.getIsMine());
+
+            // إضافة معلومات الشريك إذا كانت موجودة
+            if (request.getPartnerInfo() != null) {
+                Map<String, Object> partnerInfo = new HashMap<>();
+                partnerInfo.put("id", request.getPartnerInfo().getId());
+                partnerInfo.put("firstname", request.getPartnerInfo().getFirstname());
+                partnerInfo.put("lastname", request.getPartnerInfo().getLastname());
+                partnerInfo.put("imagePath", request.getPartnerInfo().getImagePath());
+                extraData.put("partner_info", partnerInfo);
+            }
 
             NotificationRequest request111 = NotificationRequest.builder()
                     .userId(request.getReceiverId()) // المستقبل
-                    .senderId(request.getSenderId()) // المعلق
+                    .senderId(request.getSenderId()) // المرسل
                     .type(NotificationType.MESSAGE)
                     .entityId(request.getReceiverId()) // معرف المستقبل
                     .entityContent(request.getText()) // محتوى البوست
                     .customMessage(null) // نص التعليق (اختياري للإشعار)
                     .build();
 
-            notificationService.createNotification(request111);
+            // إرسال الـ extraData مع createNotification
+            notificationService.createNotification(request111, extraData);
+
             // 5. إرجاع استجابة نجاح
             return ResponseEntity.ok(1);
 
@@ -170,7 +197,7 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<NotificationResponse>> sendNotification(
             @RequestBody NotificationRequest request) {
 
-        NotificationResponse notification = notificationService.createNotification(request);
+        NotificationResponse notification = notificationService.createNotification(request , null);
 
         ApiResponse<NotificationResponse> response = ApiResponse.<NotificationResponse>builder()
                 .success(true)

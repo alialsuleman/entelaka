@@ -66,7 +66,7 @@ public class FollowService {
                 .customMessage(null) // نص التعليق (اختياري للإشعار)
                 .build();
 
-        notificationService.createNotification(request);
+        notificationService.createNotification(request  , null);
 
 
         return null ;

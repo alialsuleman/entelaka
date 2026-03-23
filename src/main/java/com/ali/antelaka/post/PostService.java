@@ -142,7 +142,7 @@ public class PostService {
                         .entityContent(post.getText())
                         .build();
 
-                notificationService.createNotification(request);
+                notificationService.createNotification(request , null);
             }
         }
         return true ;
@@ -275,7 +275,7 @@ public class PostService {
                     .customMessage(comment.getText()) // نص التعليق (اختياري للإشعار)
                     .build();
 
-            notificationService.createNotification(request);
+            notificationService.createNotification(request , null);
         }
 
         return new CommentDTO(comment) ;

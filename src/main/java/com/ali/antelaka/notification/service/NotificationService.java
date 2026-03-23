@@ -9,8 +9,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -25,7 +28,7 @@ public class NotificationService {
     private final FirebaseNotificationService firebaseNotificationService;
 
     @Transactional
-    public NotificationResponse createNotification(NotificationRequest request) {
+    public NotificationResponse createNotification(NotificationRequest request,  Map<?,?> extra_data) {
 //        if (shouldAggregate(request)) {
 //            System.out.println("nnnnn");
 //
@@ -41,8 +44,9 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
         NotificationResponse response = convertToResponse(savedNotification);
         System.out.println("nnnnn");
-        firebaseNotificationService.sendPushNotification(response);
-        if (request.getType() ==  NotificationType.MESSAGE)notificationRepository.delete(savedNotification);
+
+        firebaseNotificationService.sendPushNotification(response , extra_data);
+        // if (request.getType() ==  NotificationType.MESSAGE)notificationRepository.delete(savedNotification);
         return response;
     }
 
