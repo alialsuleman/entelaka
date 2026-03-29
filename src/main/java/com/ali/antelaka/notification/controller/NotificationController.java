@@ -33,14 +33,24 @@ public class NotificationController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createNotification(
-            @RequestBody ChatNotificationRequest
-                    request, Principal connectedUser
+            @RequestBody ChatNotificationRequest request,
+            Principal connectedUser
     ) {
         try {
-            // إنشاء HashMap لتخزين الـ extraData
-            Map<String, Object> extraData = new HashMap<>();
 
-            // إضافة جميع بيانات الرسالة كاملة إلى extraData
+            // 🟡 تحقق مبدئي
+            if (request == null) {
+                return ResponseEntity.badRequest().body("Request body is null");
+            }
+
+            // 🟡 طباعة القيم الأساسية
+            System.out.println("=== Incoming Request ===");
+            System.out.println("Sender: " + request.getSenderId());
+            System.out.println("Receiver: " + request.getReceiverId());
+            System.out.println("Content: " + request.getText());
+
+            // إنشاء extraData
+            Map<String, Object> extraData = new HashMap<>();
             extraData.put("id", request.getId());
             extraData.put("uuid", request.getUuid());
             extraData.put("sender_id", request.getSenderId());
@@ -53,7 +63,7 @@ public class NotificationController {
             extraData.put("partner_id", request.getPartnerId());
             extraData.put("isMine", request.getIsMine());
 
-            // إضافة معلومات الشريك إذا كانت موجودة
+            // partner info
             if (request.getPartnerInfo() != null) {
                 Map<String, Object> partnerInfo = new HashMap<>();
                 partnerInfo.put("id", request.getPartnerInfo().getId());
@@ -63,24 +73,51 @@ public class NotificationController {
                 extraData.put("partner_info", partnerInfo);
             }
 
+            // إنشاء NotificationRequest
             NotificationRequest request111 = NotificationRequest.builder()
-                    .userId(request.getReceiverId()) // المستقبل
-                    .senderId(request.getSenderId()) // المرسل
+                    .userId(request.getReceiverId())
+                    .senderId(request.getSenderId())
                     .type(NotificationType.MESSAGE)
-                    .entityId(request.getReceiverId()) // معرف المستقبل
-                    .entityContent(request.getText()) // محتوى البوست
-                    .customMessage(null) // نص التعليق (اختياري للإشعار)
+                    .entityId(request.getReceiverId())
+                    .entityContent(request.getText())
+                    .customMessage(null)
                     .build();
 
-            // إرسال الـ extraData مع createNotification
-            notificationService.createNotification(request111, extraData);
+            System.out.println("=== Before calling service ===");
 
-            // 5. إرجاع استجابة نجاح
-            return ResponseEntity.ok(1);
+            // 🟡 لفّ السيرفس لوحده
+            try {
+                notificationService.createNotification(request111, extraData);
+            } catch (Exception serviceEx) {
+                serviceEx.printStackTrace();
+
+                return ResponseEntity.status(500).body(
+                        Map.of(
+                                "error", "Error inside notificationService",
+                                "message", serviceEx.getMessage(),
+                                "type", serviceEx.getClass().getName()
+                        )
+                );
+            }
+
+            // نجاح
+            return ResponseEntity.ok(
+                    Map.of(
+                            "status", "success",
+                            "message", "Notification created successfully"
+                    )
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(1);
+
+            return ResponseEntity.status(500).body(
+                    Map.of(
+                            "error", "Unexpected error",
+                            "message", e.getMessage(),
+                            "type", e.getClass().getName()
+                    )
+            );
         }
     }
 
