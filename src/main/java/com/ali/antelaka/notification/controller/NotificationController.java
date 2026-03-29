@@ -31,7 +31,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
 
-
+    @PostMapping("/create")
     public ResponseEntity<?> createNotification(
             @RequestBody ChatNotificationRequest
                     request, Principal connectedUser
