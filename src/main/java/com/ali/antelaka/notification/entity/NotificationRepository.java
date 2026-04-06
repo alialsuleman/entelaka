@@ -22,6 +22,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     Optional<Notification> findByNotificationCode(String notificationCode);
 
+    void deleteByUserIdAndSenderIdAndType(Integer userId, Integer senderId, NotificationType type);
+
+    void deleteByUserIdAndSenderIdAndTypeAndEntityId(
+            Integer userId,
+            Integer senderId,
+            NotificationType type,
+            Integer entityId
+    );
+
     @Query("SELECT n FROM Notification n WHERE n.userId = :userId " +
             "AND n.type = :type " +
             "AND n.entityId = :entityId ")

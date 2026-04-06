@@ -1,5 +1,6 @@
 package com.ali.antelaka.follow;
 
+import com.ali.antelaka.notification.entity.NotificationRepository;
 import com.ali.antelaka.notification.entity.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
@@ -22,6 +23,7 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService ;
+    private final NotificationRepository notificationRepository;
     public Page<User> getFollowers(User user, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Follow> follows = followRepository.findByFollowing(user, pageable);
@@ -79,5 +81,12 @@ public class FollowService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         followRepository.deleteByFollowerAndFollowing(user, following);
+
+        // حذف إشعار المتابعة
+        notificationRepository.deleteByUserIdAndSenderIdAndType(
+                following.getId(),          // المستلم
+                user.getId(),               // المرسل (اللي عمل follow)
+                NotificationType.NEW_FOLLOWER
+        );
     }
 }

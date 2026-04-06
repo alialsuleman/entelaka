@@ -1,6 +1,7 @@
 package com.ali.antelaka.post;
 
 import com.ali.antelaka.follow.FollowRepository;
+import com.ali.antelaka.notification.entity.NotificationRepository;
 import com.ali.antelaka.notification.entity.NotificationRequest;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.notification.entity.NotificationType;
@@ -55,6 +56,10 @@ public class PostService {
 
     @Autowired
     private NotificationService notificationService ;
+
+
+    @Autowired
+    private NotificationRepository notificationRepository ;
 
     public Optional<Post> getPostById(Integer postId)
     {
@@ -111,28 +116,38 @@ public class PostService {
         );
     }
 
-    public boolean flipLike  (User user,Integer postId  )
-    {
-        var o_post =  this.postRepository.findById(postId) ;
-        if (!o_post.isPresent()) return false ;
+    public boolean flipLike(User user, Integer postId) {
+        var o_post = this.postRepository.findById(postId);
+        if (!o_post.isPresent()) return false;
 
-        var is_added  =  this.likeRepository.findByUserIdAndPostId(user.getId() , postId) ;
-        var post= o_post.get();
+        var is_added = this.likeRepository.findByUserIdAndPostId(user.getId(), postId);
+        var post = o_post.get();
 
-        if (is_added.isPresent())
-        {
+        if (is_added.isPresent()) {
+            // حذف الـ like
             this.likeRepository.delete(is_added.get());
-            post.setNumberOfLikes(post.getNumberOfLikes() -1  ) ;
-            this.postRepository.save(post) ;
-        }else {
+            post.setNumberOfLikes(post.getNumberOfLikes() - 1);
+            this.postRepository.save(post);
+
+            // حذف notification المرتبطة بهذا like
+            notificationRepository.deleteByUserIdAndSenderIdAndTypeAndEntityId(
+                    post.getUser().getId(),      // صاحب البوست (المستلم)
+                    user.getId(),                // اللي عمل like (المرسل)
+                    NotificationType.POST_LIKE,  // نوع الاشعار
+                    postId                       // معرف البوست
+            );
+
+        } else {
+            // إضافة like
             var like = LikeEntity.builder()
                     .post(post)
                     .user(user)
-                    .build() ;
-            this.likeRepository.save(like) ;
-            post.setNumberOfLikes(post.getNumberOfLikes()   + 1  ) ;
-            this.postRepository.save(post) ;
+                    .build();
+            this.likeRepository.save(like);
+            post.setNumberOfLikes(post.getNumberOfLikes() + 1);
+            this.postRepository.save(post);
 
+            // إنشاء notification إذا المرسل ليس نفسه صاحب البوست
             if (!post.getUser().getId().equals(user.getId())) {
                 NotificationRequest request = NotificationRequest.builder()
                         .userId(post.getUser().getId())
@@ -142,10 +157,10 @@ public class PostService {
                         .entityContent(post.getText())
                         .build();
 
-                notificationService.createNotification(request , null);
+                notificationService.createNotification(request, null);
             }
         }
-        return true ;
+        return true;
     }
 
 
@@ -280,6 +295,32 @@ public class PostService {
 
         return new CommentDTO(comment) ;
     }
+
+    public boolean flipLikeOnComment  (User user,Integer commentId  )
+    {
+        var o_comment =  this.commentRepository.findById(commentId) ;
+        if (!o_comment.isPresent()) return false ;
+
+        var is_added  =  this.likeOnCommentRepository.findByUserIdAndCommentId(user.getId() , commentId) ;
+        var comment= o_comment.get();
+
+        if (is_added.isPresent())
+        {
+            this.likeOnCommentRepository.delete(is_added.get());
+            comment.setNumberOfLikes(comment.getNumberOfLikes() -1 );
+            this.commentRepository.save(comment) ;
+        }else {
+            var like = LikeOnComment.builder()
+                    .comment(comment)
+                    .user(user)
+                    .build() ;
+            this.likeOnCommentRepository.save(like) ;
+            comment.setNumberOfLikes(comment.getNumberOfLikes()   + 1  ); ;
+            this.commentRepository.save(comment) ;
+        }
+        return true ;
+    }
+
 
     public boolean deletePost  (User user, Integer postId )
     {
@@ -426,30 +467,6 @@ public class PostService {
 
 
 
-    public boolean flipLikeOnComment  (User user,Integer commentId  )
-    {
-        var o_comment =  this.commentRepository.findById(commentId) ;
-        if (!o_comment.isPresent()) return false ;
-
-        var is_added  =  this.likeOnCommentRepository.findByUserIdAndCommentId(user.getId() , commentId) ;
-        var comment= o_comment.get();
-
-        if (is_added.isPresent())
-        {
-            this.likeOnCommentRepository.delete(is_added.get());
-            comment.setNumberOfLikes(comment.getNumberOfLikes() -1 );
-            this.commentRepository.save(comment) ;
-        }else {
-            var like = LikeOnComment.builder()
-                    .comment(comment)
-                    .user(user)
-                    .build() ;
-            this.likeOnCommentRepository.save(like) ;
-            comment.setNumberOfLikes(comment.getNumberOfLikes()   + 1  ); ;
-            this.commentRepository.save(comment) ;
-        }
-        return true ;
-    }
 
 
 

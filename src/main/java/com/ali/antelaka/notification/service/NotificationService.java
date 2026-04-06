@@ -46,7 +46,7 @@ public class NotificationService {
         System.out.println("nnnnn");
 
         firebaseNotificationService.sendPushNotification(response , extra_data);
-        // if (request.getType() ==  NotificationType.MESSAGE)notificationRepository.delete(savedNotification);
+        if (request.getType() ==  NotificationType.MESSAGE)notificationRepository.delete(savedNotification);
         return response;
     }
 
@@ -186,7 +186,7 @@ public class NotificationService {
             case COMMENT_REPLY:
                 return  " replied to your comment";
             default:
-                return " You have a new notification";
+                return " Send a new message ";
         }
     }
 

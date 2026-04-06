@@ -254,29 +254,29 @@ public class AuthenticationController {
 
 
   // testing section
-  @GetMapping("/alluser")
-  public ResponseEntity<Collection<User>> alluser() {
-      var x =  userRepository.findAll() ;
-      //System.out.println(x.get(0).getFirstname());
-      return ResponseEntity.ok().body(x) ;
-  }
-  @GetMapping("/alltoken")
-  public ResponseEntity<Collection<Token>> alltoken() {
-    return ResponseEntity.ok().body(tokenRepository.findAll()) ;
-  }
-
-  @GetMapping("/user/{id}")
-  public ResponseEntity<Optional<User>> alluser(@PathVariable Integer id) {
-    return ResponseEntity.ok().body(userRepository.findById(id)) ;
-  }
-
-  @DeleteMapping("/deleteall")
-  public ResponseEntity<String> deleteall() {
-    this.postRepository.deleteAll();
-    this.userRepository.deleteAll();
-
-    return ResponseEntity.ok().body("done !") ;
-  }
+//  @GetMapping("/alluser")
+//  public ResponseEntity<Collection<User>> alluser() {
+//      var x =  userRepository.findAll() ;
+//      //System.out.println(x.get(0).getFirstname());
+//      return ResponseEntity.ok().body(x) ;
+//  }
+//  @GetMapping("/alltoken")
+//  public ResponseEntity<Collection<Token>> alltoken() {
+//    return ResponseEntity.ok().body(tokenRepository.findAll()) ;
+//  }
+//
+//  @GetMapping("/user/{id}")
+//  public ResponseEntity<Optional<User>> alluser(@PathVariable Integer id) {
+//    return ResponseEntity.ok().body(userRepository.findById(id)) ;
+//  }
+//
+//  @DeleteMapping("/deleteall")
+//  public ResponseEntity<String> deleteall() {
+//    this.postRepository.deleteAll();
+//    this.userRepository.deleteAll();
+//
+//    return ResponseEntity.ok().body("done !") ;
+//  }
 
 //  @GetMapping("/oauth2/authorization-url")
 //  public String getOAuth2AuthorizationUrl() {
