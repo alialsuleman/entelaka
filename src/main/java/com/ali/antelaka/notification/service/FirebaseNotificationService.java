@@ -39,11 +39,14 @@ public class FirebaseNotificationService {
             Map<String, String> data = new HashMap<>();
             data.put("notificationId", notification.getId().toString());
             data.put("type", notification.getType().toString());
-            if (notification.getType() == NotificationType.NEW_FOLLOWER)
+            if (notification.getType() == NotificationType.NEW_FOLLOWER || notification.getType() == NotificationType.MESSAGE)
             {
                 data.put("entityId", notification.getSenderId() != null ?
                         notification.getSenderId().toString() : "");
-            }else  data.put("entityId", notification.getEntityId() != null ?
+            }
+            else    data.put("entityId", notification.getEntityId() != null ?
+
+
                     notification.getEntityId().toString() : "");
             data.put("isAggregated", String.valueOf(notification.isAggregated()));
 
