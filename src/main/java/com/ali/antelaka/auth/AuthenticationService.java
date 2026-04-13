@@ -4,9 +4,10 @@ import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.token.TokenType;
+import com.ali.antelaka.user.dto.ManagerResponse;
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +16,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.security.sasl.AuthenticationException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,21 +39,24 @@ public class AuthenticationService {
 
 
     var lastUser = repository.findByEmail(request.getEmail()) ;
-    if (lastUser.isPresent())
+    if (lastUser.isPresent() && request.getRole() != Role.ADMIN  )
     {
       throw new RuntimeException("This email already exists.")  ;
     }
+    boolean enable =  false ;
+    if (request.getRole()== Role.ADMIN || request.getRole()== Role.MANAGER) enable = true ;
 
-
-    var user = User.builder()
+      var user = User.builder()
         .firstname(request.getFirstname())
         .lastname(request.getLastname())
         .email(request.getEmail())
         .password(passwordEncoder.encode(request.getPassword()))
         .role(request.getRole())
-        .enabled(false)
+        .enabled(enable)
         .build();
-    var savedUser = repository.save(user);
+
+      User savedUser ;
+      if (!lastUser.isPresent()) savedUser = repository.save(user);
 //    var jwtToken = jwtService.generateToken(user , false);
 //    var refreshToken = jwtService.generateRefreshToken(user);
 //    saveUserToken(savedUser, jwtToken);
@@ -70,6 +75,41 @@ public class AuthenticationService {
   }
 
 
+    @Transactional
+    public void deleteManager(Integer managerId) {
+        User user = repository.findById(managerId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + managerId));
+
+        // التأكد أن المستخدم المحذوف هو مدير
+        if (user.getRole() != Role.MANAGER) {
+            throw new RuntimeException("User is not a manager");
+        }
+
+
+
+        repository.delete(user);
+    }
+
+
+
+    public List<ManagerResponse> getAllManagers() {
+        List<User> managers = repository.findByRole(Role.MANAGER);
+        return managers.stream()
+                .map(this::mapToManagerResponse)
+                .collect(Collectors .toList());
+    }
+
+    private ManagerResponse mapToManagerResponse(User user) {
+        return ManagerResponse.builder()
+                .id(user.getId())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail())
+                .imagePath(user.getImagePath())
+                .role(user.getRole().name())
+                .enabled(user.isEnabled())
+                .build();
+    }
   public AuthenticationResponse authenticate(AuthenticationRequest request) {
     authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(

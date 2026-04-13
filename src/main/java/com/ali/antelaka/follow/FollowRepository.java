@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface FollowRepository extends JpaRepository<Follow, Integer> {
 
     Optional<Follow> findByFollowerAndFollowing(User follower, User following);
+    int countByFollowing(User user);
+    int countByFollower(User user);
 
     Optional<Follow> findByFollower_IdAndFollowing_Id(Integer followerId, Integer followingId);
     // جلب الناس اللي بيتابعهم المستخدم

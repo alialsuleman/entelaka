@@ -52,5 +52,34 @@ public interface CommentRepository  extends JpaRepository<Comment, Integer> {
     List<Comment> findCommentsWithDetails(@Param("commentIds") List<Integer> commentIds);
 
 
+    @Query("""
+    SELECT c FROM Comment c 
+    WHERE c.post.id = :postId
+    AND (
+        :keyword IS NULL OR 
+        LOWER(c.text) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    )
+    """)
+    Page<Comment> findCommentsByPostIdForAdmin(
+            @Param("postId") Integer postId,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT c FROM Comment c 
+    WHERE (
+        :keyword IS NULL OR 
+        LOWER(c.text) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    )
+    """)
+    Page<Comment> findAllCommentsForAdmin(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.user WHERE c.id = :commentId")
+    Optional<Comment> findCommentWithUser(@Param("commentId") Integer commentId);
+
 
 }

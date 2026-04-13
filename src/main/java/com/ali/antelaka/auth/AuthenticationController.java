@@ -7,6 +7,7 @@ import com.ali.antelaka.post.repository.PostImageRepository;
 import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
+import com.ali.antelaka.user.dto.ManagerResponse;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.request.CheckOtpRequest;
@@ -20,16 +21,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+import static com.ali.antelaka.user.entity.Role.MANAGER;
 import static com.ali.antelaka.user.entity.Role.USER;
 
 @RestController
@@ -87,6 +87,7 @@ public class AuthenticationController {
     return ResponseEntity.ok(response);
 
   }
+
 
 
   // login

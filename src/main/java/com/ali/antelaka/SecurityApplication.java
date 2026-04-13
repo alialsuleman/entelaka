@@ -40,49 +40,49 @@ public class SecurityApplication {
 	}
 
 
-	/*
+
 	@Bean
 	public CommandLineRunner commandLineRunner(
 			AuthenticationService service
 	) {
 		return args -> {
-			var admin = RegisterRequest.builder()
+
+			var admin1 = RegisterRequest.builder()
 					.firstname("Admin")
 					.lastname("Admin")
-					.email("admin@mail.com")
-					.password("password")
+					.email("admin1@gmail.com")
+					.password("Admin@12345")
 					.role(ADMIN)
 					.build();
-			service.register(admin) ;
+			service.register(admin1) ;
 			//System.out.println("Admin token: " + service.register(admin).getAccessToken());
-			System.out.println("Admin roles: " + admin.getRole());
+			System.out.println("Admin roles: " + admin1.getRole());
 
-			var manager = RegisterRequest.builder()
-					.firstname("Admin")
+			var admin2 = RegisterRequest.builder()
+					.firstname("Admin2")
 					.lastname("Admin")
-					.email("manager@mail.com")
-					.password("password")
-					.role(MANAGER)
+					.email("admin2@gmail.com")
+					.password("Admin@12345")
+					.role(ADMIN)
 					.build();
-			service.register(manager) ;
+			service.register(admin2) ;
 		//	System.out.println("Manager token: " + service.register(manager).getAccessToken());
-			System.out.println("Manager roles: " + manager.getRole());
+			System.out.println("Manager roles: " + admin2.getRole());
 
-			var user = RegisterRequest.builder()
-					.firstname("user")
-					.lastname("user")
-					.email("user@mail.com")
-					.password("password")
-					.role(USER)
+            var admin3 = RegisterRequest.builder()
+                    .firstname("Admin3")
+                    .lastname("Admin")
+                    .email("admin3@gmail.com")
+                    .password("Admin@12345")
+                    .role(ADMIN)
+                    .build();
 
-					.build();
-
-			service.register(user) ;
-		//	System.out.println("USer token: " + service.register(user).getAccessToken());
-			System.out.println("USer roles: " + user.getRole());
+            service.register(admin3) ;
+            //	System.out.println("Manager token: " + service.register(manager).getAccessToken());
+            System.out.println("Manager roles: " + admin3.getRole());
 
 		};
 	}
 
-	 */
+
 }

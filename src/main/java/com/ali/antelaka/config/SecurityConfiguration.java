@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers("/auth/**").permitAll()
                                 .requestMatchers("/uploads/**").permitAll()
+                                .requestMatchers("/admin/**").permitAll()
                                 .requestMatchers("/follow/**").permitAll()
                                 .requestMatchers("/oauth2/authorization/google").permitAll()
                                 .requestMatchers("/email/**").permitAll()

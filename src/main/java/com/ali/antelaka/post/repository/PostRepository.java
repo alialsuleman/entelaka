@@ -1,6 +1,7 @@
 package com.ali.antelaka.post.repository;
 
 import com.ali.antelaka.post.entity.Post;
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
 
     Page<Post> findByUser(User user, Pageable pageable);
+    int countByUser(User user);
 
 
     @Query("""
@@ -181,4 +183,26 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     List<Post> findNewerFollowedPosts(@Param("followerId") Long followerId,
                                       @Param("x") LocalDateTime x,
                                       Pageable pageable);
+
+
+
+    //
+    @Query("""
+    SELECT p FROM Post p 
+    WHERE p.user IS NOT NULL
+    AND (
+        :keyword IS NULL OR 
+        LOWER(p.text) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        LOWER(p.tag) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    )
+    AND (:tag IS NULL OR LOWER(p.tag) LIKE LOWER(CONCAT('%', :tag, '%')))
+    """)
+    Page<Post> findAllForAdmin(
+            @Param("keyword") String keyword,
+            @Param("tag") String tag,
+            Pageable pageable
+    );
+
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.post.id = :postId")
+    long countCommentsByPostId(@Param("postId") Integer postId);
 }

@@ -12,6 +12,7 @@ import com.ali.antelaka.post.repository.*;
 import com.ali.antelaka.post.request.CreateCommentRequest;
 import com.ali.antelaka.post.request.CreatePostRequest;
 import com.ali.antelaka.post.request.EditCommentRequest;
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -610,7 +611,7 @@ public class PostController {
 
 
     @DeleteMapping("/comments/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','MANGER')")
     public ResponseEntity<?> deleteComment(
             @PathVariable Integer id,
             Principal connectedUser
@@ -626,7 +627,7 @@ public class PostController {
             this.commentRepository.save( comment.getCommentParent()) ;
         }
 
-        if ( !comment.getUser().getId().equals(user.getId())) {
+        if (user.getRole() == Role.USER  &&  !comment.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.builder()
                             .success(false)

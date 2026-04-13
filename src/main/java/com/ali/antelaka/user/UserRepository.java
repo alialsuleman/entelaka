@@ -3,6 +3,7 @@ package com.ali.antelaka.user;
 import java.util.List;
 import java.util.Optional;
 
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepository extends JpaRepository<User, Integer> {
 
   Optional<User> findByEmail(String email);
-
+  List<User> findByRole(Role role);
+  long countByRole(Role role);
   @Query("""
     SELECT u FROM User u
     WHERE
