@@ -537,7 +537,7 @@ public class PostController {
 
 
     @GetMapping("/{postId}/comments")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'USER' , 'MANAGER')")
     public ResponseEntity<?> getPostComments(
             @PathVariable Integer postId,
             @RequestParam(defaultValue = "0") int page,
@@ -573,7 +573,7 @@ public class PostController {
 
 
     @GetMapping("/repliesoncomment")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'USER')")
     public ResponseEntity<?> getRepliesOnComments(
 
             @RequestParam() int commentId ,
@@ -611,7 +611,7 @@ public class PostController {
 
 
     @DeleteMapping("/comments/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER','MANGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','MANAGER')")
     public ResponseEntity<?> deleteComment(
             @PathVariable Integer id,
             Principal connectedUser

@@ -17,7 +17,7 @@ import java.util.Collections;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'MANGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class AdminPostController {
 
     private final AdminPostService adminPostService;

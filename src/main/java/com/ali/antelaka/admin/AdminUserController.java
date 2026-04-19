@@ -13,8 +13,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -24,13 +26,14 @@ import static com.ali.antelaka.user.entity.Role.MANAGER;
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'MANGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
 
     private final AuthenticationService service ;
+
 
 
 
@@ -175,9 +178,18 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<AdminUserResponseDTO>> getUserDetails(@PathVariable Integer userId) {
+    public ResponseEntity<ApiResponse<AdminUserResponseDTO>> getUserDetails(@PathVariable Integer userId
+            , Principal connectedUser
+    ) {
         try {
-            AdminUserResponseDTO user = adminUserService.getUserDetails(userId);
+            var userrrr = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+            int id = userId ;
+            if (id == 0 ) id = userrrr.getId() ;
+
+            AdminUserResponseDTO user = adminUserService.getUserDetails(id);
+
+
+
 
             ApiResponse<AdminUserResponseDTO> response = ApiResponse
                     .<AdminUserResponseDTO>builder()

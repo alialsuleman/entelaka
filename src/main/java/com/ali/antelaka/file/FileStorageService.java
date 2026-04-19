@@ -113,4 +113,28 @@ public class FileStorageService {
         }
     }
 
+
+    public List<String> saveFiles(List<MultipartFile> files, String subdirectory) throws IOException {
+        List<String> fileNames = new ArrayList<>();
+        Path targetDir = Paths.get(uploadDir, subdirectory);
+        Files.createDirectories(targetDir);
+
+        for (MultipartFile file : files) {
+            validateImage(file);
+            if (!file.isEmpty()) {
+                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                Path filePath = targetDir.resolve(fileName);
+                file.transferTo(filePath.toFile());
+                fileNames.add(subdirectory + "/" + fileName); // المسار النسبي مع المجلد
+            }
+        }
+        return fileNames;
+    }
+
+     public boolean deleteFileByRelativePath(String relativePath) {
+        if (relativePath == null || relativePath.isBlank()) return false;
+        Path filePath = Paths.get(uploadDir, relativePath);
+        File file = filePath.toFile();
+        return file.exists() && file.delete();
+    }
 }

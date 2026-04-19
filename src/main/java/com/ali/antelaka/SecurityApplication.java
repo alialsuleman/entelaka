@@ -47,39 +47,7 @@ public class SecurityApplication {
 	) {
 		return args -> {
 
-			var admin1 = RegisterRequest.builder()
-					.firstname("Admin")
-					.lastname("Admin")
-					.email("admin1@gmail.com")
-					.password("Admin@12345")
-					.role(ADMIN)
-					.build();
-			service.register(admin1) ;
-			//System.out.println("Admin token: " + service.register(admin).getAccessToken());
-			System.out.println("Admin roles: " + admin1.getRole());
 
-			var admin2 = RegisterRequest.builder()
-					.firstname("Admin2")
-					.lastname("Admin")
-					.email("admin2@gmail.com")
-					.password("Admin@12345")
-					.role(ADMIN)
-					.build();
-			service.register(admin2) ;
-		//	System.out.println("Manager token: " + service.register(manager).getAccessToken());
-			System.out.println("Manager roles: " + admin2.getRole());
-
-            var admin3 = RegisterRequest.builder()
-                    .firstname("Admin3")
-                    .lastname("Admin")
-                    .email("admin3@gmail.com")
-                    .password("Admin@12345")
-                    .role(ADMIN)
-                    .build();
-
-            service.register(admin3) ;
-            //	System.out.println("Manager token: " + service.register(manager).getAccessToken());
-            System.out.println("Manager roles: " + admin3.getRole());
 
 		};
 	}
