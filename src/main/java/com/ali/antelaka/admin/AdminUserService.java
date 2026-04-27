@@ -5,6 +5,7 @@ package com.ali.antelaka.admin;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.user.UserRepository;
+import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
  import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +60,7 @@ public class AdminUserService {
     public User banUser(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-
+        if (user.getRole()!= Role.USER) throw new RuntimeException("you are not allowed to do that");
         user.setEnabled(false);
         return userRepository.save(user);
     }
