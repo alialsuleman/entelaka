@@ -17,14 +17,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ad-images")
-@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")  // فقط الأدمن والمدير
+ // فقط الأدمن والمدير
 public class AdImageController {
 
     @Autowired
     private AdImageService adImageService;
 
     // رفع صور إعلانات (حتى 5 صور)
+
     @PostMapping("/upload")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse> uploadAdImages(@RequestParam("files") List<MultipartFile> files) {
         try {
             List<AdImage> savedImages = adImageService.uploadAdImages(files);
@@ -55,6 +57,7 @@ public class AdImageController {
 
     // جلب جميع صور الإعلانات (قائمة مع id والمسار)
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER','USER')")
     public ResponseEntity<ApiResponse> getAllAdImages() {
         List<AdImage> images = adImageService.getAllAdImages();
         Map<Integer, String> data = new HashMap<>();
@@ -73,6 +76,7 @@ public class AdImageController {
 
     // حذف صورة إعلان معينة بواسطة id
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse> deleteAdImage(@PathVariable Integer id) {
         boolean deleted = adImageService.deleteAdImage(id);
         ApiResponse response = ApiResponse.builder()
