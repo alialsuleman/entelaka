@@ -2,6 +2,7 @@ package com.ali.antelaka.exceptionHandler.handler;
 
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.exceptionHandler.entity.ErrorDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,23 @@ public class GlobalExceptionHandler {
 
 
 
+        // log section
+        ErrorDetails errorDetails = ErrorDetails.builder()
+                .traceId(traceId)
+                .exception(ex.getClass().getSimpleName())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .method(request.getMethod())
+                .className(element.getClassName())
+                .methodName(element.getMethodName())
+                .lineNumber(element.getLineNumber())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+
+
+
+        // api response section
         ApiResponse<?> response = ApiResponse.builder()
                 .success(false)
                 .message("Internal server error")
