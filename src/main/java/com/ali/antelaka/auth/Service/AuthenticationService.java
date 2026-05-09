@@ -1,5 +1,8 @@
-package com.ali.antelaka.auth;
+package com.ali.antelaka.auth.Service;
 
+import com.ali.antelaka.auth.dto.AuthenticationRequest;
+import com.ali.antelaka.auth.dto.AuthenticationResponse;
+import com.ali.antelaka.auth.dto.RegisterRequest;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;

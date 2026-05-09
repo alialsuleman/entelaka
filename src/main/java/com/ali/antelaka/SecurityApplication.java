@@ -1,8 +1,6 @@
 package com.ali.antelaka;
 
-import com.ali.antelaka.auth.AuthenticationService;
-import com.ali.antelaka.auth.RegisterRequest;
-import com.ali.antelaka.page.entity.PageType;
+import com.ali.antelaka.auth.Service.AuthenticationService;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +13,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import javax.crypto.SecretKey;
 
 import java.util.Base64;
-
-import static com.ali.antelaka.user.entity.Role.*;
 
 @Slf4j
 @SpringBootApplication

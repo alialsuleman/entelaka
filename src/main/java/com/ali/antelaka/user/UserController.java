@@ -1,18 +1,16 @@
 package com.ali.antelaka.user;
 
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.auth.AuthenticationResponse;
 import com.ali.antelaka.file.FileStorageService;
 import com.ali.antelaka.user.dto.UserPublicProfileResponse;
 import com.ali.antelaka.user.dto.UserSearchDTO;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.ChangePasswordRequest;
 import com.ali.antelaka.user.request.UpdateProfileRequest;
-import com.ali.antelaka.user.service.OtpService;
+import com.ali.antelaka.auth.Service.OtpService;
 import com.ali.antelaka.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;

@@ -2,12 +2,11 @@ package com.ali.antelaka.google;
 
 
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.auth.AuthenticationResponse;
-import com.ali.antelaka.auth.AuthenticationService;
+import com.ali.antelaka.auth.dto.AuthenticationResponse;
+import com.ali.antelaka.auth.Service.AuthenticationService;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.service.UserService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController

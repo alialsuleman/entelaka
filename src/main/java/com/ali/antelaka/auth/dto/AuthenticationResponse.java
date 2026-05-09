@@ -1,4 +1,4 @@
-package com.ali.antelaka.auth;
+package com.ali.antelaka.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

@@ -1,10 +1,14 @@
-package com.ali.antelaka.user.service;
+package com.ali.antelaka.auth.Service;
 
 
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.auth.AuthenticationResponse;
-import com.ali.antelaka.auth.AuthenticationService;
+import com.ali.antelaka.auth.OtpProperties;
+import com.ali.antelaka.auth.dto.AuthenticationResponse;
+import com.ali.antelaka.auth.dto.OtpContext;
+import com.ali.antelaka.auth.dto.OtpType;
 import com.ali.antelaka.config.JwtService;
+import com.ali.antelaka.exceptionHandler.exception.BadRequestException;
+import com.ali.antelaka.exceptionHandler.exception.NotFoundException;
 import com.ali.antelaka.mail.EmailService;
 
 import com.ali.antelaka.page.entity.PageEntity;
@@ -13,9 +17,13 @@ import com.ali.antelaka.page.PageRepository;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.user.request.CheckOtpRequest;
- import org.springframework.beans.factory.annotation.Autowired;
+import com.ali.antelaka.user.request.SendOtpRequest;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -27,82 +35,139 @@ import java.util.Map;
 import java.util.Random;
 
 @Service
+@AllArgsConstructor
+@NoArgsConstructor
 public class OtpService {
 
     @Autowired
     private UserRepository userRepository ;
-
     @Autowired
     private EmailService emailService ;
-
     @Autowired
     private AuthenticationService authenticationService ;
-
-
     @Autowired
     private PageRepository pageRepository ;
-
     @Autowired
     private JwtService  jwtService ;
-
     @Value("${application.security.jwt.resetpasswordexpiration}")
     private long jwtResetPasswordExpiration;
+
+
+    @Autowired
+    private OtpProperties otpProperties;
+
+
+
 
     // done
     private String generateOtp() {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
-    public void sendotp(Principal connectedUser, boolean resetpassword ) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        this.sendotp(user , resetpassword);
-    }
-
-    public void sendotp(User user, boolean resetpassword ) {
 
 
-                LocalDateTime now = LocalDateTime.now();
 
-                String otp = generateOtp() ;
-                int manyAttempts =  0 ;
-                if (resetpassword ) {
-                    if ( now.isBefore(user.getResetPasswordOTPSendingBanTime())) {
-                        throw new RuntimeException();
-                    }
-                    user.setNumberOfresetPasswordOtpSending(user.getNumberOfresetPasswordOtpSending()+1);
-                    if (user.getNumberOfresetPasswordOtpSending()%3 == 0  ) {
-                        if (Duration.between(LocalDateTime.now() , user.getLastResetPasswordOTPSentAt()).getSeconds()/60  < 20 ) {
-                             manyAttempts = 59 ;
-                        }else user.setNumberOfresetPasswordOtpSending(0); ;
-                    }
-                    user.setResetPasswordOtp(otp );
-                    user.setResetPasswordOTPSendingBanTime(LocalDateTime.now().plusMinutes(1+manyAttempts)) ;
-                    user.setResetPasswordOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
-                    user.setLastResetPasswordOTPSentAt(LocalDateTime.now());
-                }
-                else {
-                    if ( now.isBefore(user.getOTPSendingBanTime())) {
-                        throw new RuntimeException();
-                    }
-                    user.setNumberOfOtpSending(user.getNumberOfOtpSending()+1);
-                    if (user.getNumberOfOtpSending()%3 ==0 ) {
-                        if (Duration.between(LocalDateTime.now() , user.getLastOtpSentAt()).getSeconds()/60  < 20 ) {
-                            manyAttempts = 59 ;
-                        }else user.setNumberOfOtpSending(0); ;
+    public void sendOtp(SendOtpRequest request) {
+        User user  = getUser( request.getEmail());
+        boolean resetPassword = request.getSetpassword()==1 ;
 
-                    }
-                    user.setOtp(otp);
-                    user.setOTPSendingBanTime(LocalDateTime.now().plusMinutes(1+manyAttempts));
-                    user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(30));
-                    user.setLastOtpSentAt(LocalDateTime.now());
-                }
-                userRepository.save(user);
+        OtpContext context = resolveContext(user, resetPassword);
+        validateNotBanned(context);
 
-                this.emailService.sendEmail(user.getEmail() , "OTP Verification", "Your OTP code is:"+otp);
+        String otp = generateOtp();
+        incrementAndApplyBanIfNeeded(user, context);
+        applyOtp(user, context, otp);
 
-
+        userRepository.save(user);
+        emailService.sendEmail(user.getEmail(), "OTP Verification", "Your OTP code is: " + otp);
 
     }
+
+
+    private User getUser (String email){
+        var user  =  this.userRepository.findByEmail(email) ;
+        if (!user.isPresent()) throw new NotFoundException("you have to register first" , null) ;
+        return user.get() ;
+    }
+
+
+
+    private OtpContext resolveContext(User user, boolean resetPassword) {
+        if (resetPassword) {
+            return OtpContext.builder()
+                    .banTime(user.getResetPasswordOTPSendingBanTime())
+                    .lastSentAt(user.getLastResetPasswordOTPSentAt())
+                    .numberOfSending(user.getNumberOfresetPasswordOtpSending())
+                    .type(OtpType.RESET_PASSWORD)
+                    .build();
+        } else {
+            return OtpContext.builder()
+                    .banTime(user.getOTPSendingBanTime())
+                    .lastSentAt(user.getLastOtpSentAt())
+                    .numberOfSending(user.getNumberOfOtpSending())
+                    .type(OtpType.EMAIL_CONFIRMATION)
+                    .build();
+        }
+    }
+
+    private void validateNotBanned(OtpContext context) {
+        if (context.getBanTime() != null &&
+                LocalDateTime.now().isBefore(context.getBanTime())) {
+            throw new BadRequestException("Too many attempts. Try again later.");
+        }
+    }
+
+
+    private void incrementAndApplyBanIfNeeded(User user, OtpContext context) {
+        int newCount = context.getNumberOfSending() + 1;
+        int banMinutes = otpProperties.getShortBanMinutes();
+
+        if (newCount % otpProperties.getMaxAttempts() == 0) {
+            boolean recentActivity = context.getLastSentAt() != null &&
+                    Duration.between(context.getLastSentAt(), LocalDateTime.now())
+                            .toMinutes() < otpProperties.getResetWindowMinutes();
+
+            if (recentActivity) {
+                banMinutes = otpProperties.getLongBanMinutes();
+            } else {
+                newCount = 0; // reset العداد
+            }
+        }
+
+        applyBanAndCount(user, context.getType(), newCount, banMinutes);
+    }
+
+
+    private void applyBanAndCount(User user, OtpType type, int count, int banMinutes) {
+        LocalDateTime banTime = LocalDateTime.now().plusMinutes(banMinutes);
+        LocalDateTime now = LocalDateTime.now();
+
+        if (type == OtpType.RESET_PASSWORD) {
+            user.setNumberOfresetPasswordOtpSending(count);
+            user.setResetPasswordOTPSendingBanTime(banTime);
+            user.setLastResetPasswordOTPSentAt(now);
+        } else {
+            user.setNumberOfOtpSending(count);
+            user.setOTPSendingBanTime(banTime);
+            user.setLastOtpSentAt(now);
+        }
+    }
+
+
+    private void applyOtp(User user, OtpContext context, String otp) {
+        LocalDateTime expiry = LocalDateTime.now().plusMinutes(otpProperties.getExpiryMinutes());
+
+        if (context.getType() == OtpType.RESET_PASSWORD) {
+            user.setResetPasswordOtp(otp);
+            user.setResetPasswordOtpExpirationTime(expiry);
+        } else {
+            user.setOtp(otp);
+            user.setOtpExpirationTime(expiry);
+        }
+    }
+
+
+
 
 
     public ApiResponse<?> checkOtp(CheckOtpRequest request) {

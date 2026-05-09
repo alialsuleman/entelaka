@@ -1,7 +1,7 @@
 package com.ali.antelaka.user.service;
 
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.auth.AuthenticationService;
+import com.ali.antelaka.auth.Service.AuthenticationService;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.google.GoogleUser;
 

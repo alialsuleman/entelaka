@@ -1,12 +1,11 @@
 package com.ali.antelaka.admin;
 
 
-import com.ali.antelaka.auth.AuthenticationService;
-import com.ali.antelaka.auth.RegisterRequest;
+import com.ali.antelaka.auth.Service.AuthenticationService;
+import com.ali.antelaka.auth.dto.RegisterRequest;
 import com.ali.antelaka.user.dto.ManagerResponse;
 import com.ali.antelaka.user.entity.User;
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

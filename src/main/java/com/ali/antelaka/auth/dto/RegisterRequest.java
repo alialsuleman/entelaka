@@ -1,4 +1,4 @@
-package com.ali.antelaka.auth;
+package com.ali.antelaka.auth.dto;
 
 import com.ali.antelaka.user.entity.Role;
 import jakarta.validation.constraints.Email;
