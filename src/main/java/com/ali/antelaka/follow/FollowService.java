@@ -3,7 +3,7 @@ package com.ali.antelaka.follow;
 import com.ali.antelaka.exceptionHandler.exception.BadRequestException;
 import com.ali.antelaka.exceptionHandler.exception.NotFoundException;
 import com.ali.antelaka.notification.entity.NotificationRepository;
-import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.user.UserRepository;
@@ -14,9 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

@@ -1,6 +1,8 @@
 package com.ali.antelaka.notification.service;
 
 
+import com.ali.antelaka.notification.DTO.NotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationResponse;
 import com.ali.antelaka.notification.entity.*;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.entity.User;
@@ -10,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class NotificationService {
     private final FirebaseNotificationService firebaseNotificationService;
 
     @Transactional
-    public NotificationResponse createNotification(NotificationRequest request,  Map<?,?> extra_data) {
+    public NotificationResponse createNotification(NotificationRequest request, Map<?,?> extra_data) {
 //        if (shouldAggregate(request)) {
 //            System.out.println("nnnnn");
 //

@@ -5,7 +5,7 @@ import com.ali.antelaka.auth.Service.AuthenticationService;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.google.GoogleUser;
 
-import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.page.entity.PageEntity;

@@ -1,9 +1,9 @@
 package com.ali.antelaka.notification.controller;
 
 import com.ali.antelaka.ApiResponse;
-import com.ali.antelaka.notification.entity.ChatNotificationRequest;
-import com.ali.antelaka.notification.entity.NotificationRequest;
-import com.ali.antelaka.notification.entity.NotificationResponse;
+import com.ali.antelaka.notification.DTO.ChatNotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationResponse;
 import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.user.entity.User;

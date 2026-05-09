@@ -1,5 +1,6 @@
-package com.ali.antelaka.notification.entity;
+package com.ali.antelaka.notification.DTO;
 
+import com.ali.antelaka.notification.entity.NotificationType;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;

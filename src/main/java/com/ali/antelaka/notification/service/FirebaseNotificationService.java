@@ -1,7 +1,7 @@
 package com.ali.antelaka.notification.service;
 
  import com.ali.antelaka.notification.entity.NotificationPreferenceRepository;
- import com.ali.antelaka.notification.entity.NotificationResponse;
+ import com.ali.antelaka.notification.DTO.NotificationResponse;
  import com.ali.antelaka.notification.entity.NotificationType;
  import com.fasterxml.jackson.databind.ObjectMapper;
  import com.google.firebase.messaging.*;

@@ -1,7 +1,7 @@
 package com.ali.antelaka.post.service;
 
 import com.ali.antelaka.follow.FollowRepository;
-import com.ali.antelaka.notification.entity.NotificationRequest;
+import com.ali.antelaka.notification.DTO.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationType;
 import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.post.DTO.*;

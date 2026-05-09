@@ -1,4 +1,4 @@
-package com.ali.antelaka.notification.entity;
+package com.ali.antelaka.notification.DTO;
 
 
 import lombok.Data;
