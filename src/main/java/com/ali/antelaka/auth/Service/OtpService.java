@@ -170,190 +170,124 @@ public class OtpService {
 
 
 
-    public ApiResponse<?> checkOtp(CheckOtpRequest request) {
+    public AuthenticationResponse checkOtp(CheckOtpRequest request) {
 
-        if (request.getEmail()== null)
-        {
-            return
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("Email is required !!!!")
-                            .status(HttpStatus.BAD_REQUEST.value())
-                            .build();
-        }
-        var user1 = this.userRepository.findByEmail(request.getEmail());
-        if (user1.isEmpty())
-        {
-            return
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("Email is not registered !!!!")
-                            .status(HttpStatus.BAD_REQUEST.value())
-                            .build();
-        }
-        var user = user1.get() ;
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("Email is not registered"));
 
+        boolean isForResetPassword = request.getSetpassword() == 1;
 
+        validateOtp(user, request.getOtp(), isForResetPassword);
+        AuthenticationResponse response = buildAuthResponse(user, isForResetPassword);
+        resetUserOtpState(user, isForResetPassword);
 
-        boolean isForRestPassword =  false ;
-        if (request.getSetpassword() ==1 ) isForRestPassword = true ;
+        return response;
+    }
 
-        boolean isValid = false ;
+    private void validateOtp(User user, String otpInput, boolean isForResetPassword) {
+        String storedOtp = isForResetPassword ? user.getResetPasswordOtp() : user.getOtp();
+        LocalDateTime expirationTime = isForResetPassword
+                ? user.getResetPasswordOtpExpirationTime()
+                : user.getOtpExpirationTime();
 
-        if (isForRestPassword )
-        {
-            if (user.getResetPasswordOtp() == null ) {
-                return
-                        ApiResponse.<Void>builder()
-                                .success(false)
-                                .message("No OTP found. Request a new one.")
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .build();
-
-            }
-
-            isValid = user.getResetPasswordOtp().equals(request.getOtp())
-                    && LocalDateTime.now().isBefore(user.getResetPasswordOtpExpirationTime());
-        }
-       else  {
-
-
-            if (user.getOtp() == null ) {
-                return
-                        ApiResponse.<Void>builder()
-                                .success(false)
-                                .message("No OTP found. Request a new one.")
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .build();
-
-            }
-            System.out.println(LocalDateTime.now()  + " " +user.getOtpExpirationTime());
-            isValid = user.getOtp().equals(request.getOtp())
-                    && LocalDateTime.now().isBefore( user.getOtpExpirationTime());
+        if (storedOtp == null) {
+            throw new NotFoundException("No OTP found. Request a new one.");
         }
 
-        if (isValid) {
-            user.setEnabled(true );
+        boolean isValid = storedOtp.equals(otpInput)
+                && LocalDateTime.now().isBefore(expirationTime);
 
-
-            user.setOtp(null);
-            user.setResetPasswordOtp(null);
-
-
-            user.setResetPasswordOtpExpirationTime(LocalDateTime.now().minusMinutes(10) );
-            user.setOtpExpirationTime(LocalDateTime.now().minusMinutes(10) );
-
-
-            user.setAttempts(0);
-            user.setResetPasswordOtpAttempts(0) ;
-
-            user.setNumberOfOtpSending(0);
-            user.setNumberOfresetPasswordOtpSending(0);
-
-            user.setResetPasswordOTPSendingBanTime(LocalDateTime.now().minusMinutes(10) );
-            user.setOTPSendingBanTime(LocalDateTime.now().minusMinutes(10) );
-
-            user.setLastOtpSentAt(LocalDateTime.now().minusMinutes(10) );
-            user.setLastResetPasswordOTPSentAt(LocalDateTime.now().minusMinutes(10) );
-
-            if (isForRestPassword) {
-                user.setMaxTimeToResetPassword(
-                        LocalDateTime.now().plusMinutes(jwtResetPasswordExpiration/60000));
-            }
-
-
-
-
-            String token = this.jwtService.generateToken(user , isForRestPassword) ;
-
-            this.authenticationService.revokeAllUserTokens(user);
-            this.authenticationService.saveUserToken(user, token);
-            var savedUser = userRepository.save(user);
-            if (!isForRestPassword) {
-                PageEntity publicUserPage = PageEntity.builder()
-                        .id(savedUser.getId())
-                        .user(savedUser)
-                        .pageType(PageType.PUBLIC.name())
-                        .description("Hi there")
-                        .build();
-                this.pageRepository.save(publicUserPage);
-            }
-
-
-
-
-
-            AuthenticationResponse res  ;
-            if (isForRestPassword) res  = new AuthenticationResponse(token , null , user.isEnabled() );
-            else {
-                String refreshToken  = this.jwtService.generateRefreshToken(user) ;
-                res  = new AuthenticationResponse(token , refreshToken , user.isEnabled() );
-            }
-
-
-            return
-                    ApiResponse.builder()
-                            .success(true)
-                            .data(res)
-                            .message("OTP is valid")
-                            .status(HttpStatus.OK.value())
-                            .build() ;
-
-        } else {
-            int numberOfAttempts =0 ;
-
-            if (isForRestPassword)
-            {
-                user.setResetPasswordOtpAttempts(user.getResetPasswordOtpAttempts()+1);
-                numberOfAttempts =  user.getResetPasswordOtpAttempts() ;
-            }
-
-            else{
-                user.setAttempts(user.getAttempts()+1);
-                numberOfAttempts =  user.getAttempts() ;
-            }
-
-            this.userRepository.save(user) ;
-
-            Map<String,Integer> m = new HashMap<>( ) ;
-            m.put("numberOfAttempts" , numberOfAttempts) ;
-            m.put("numberOfAttemptsRemaining" ,  (3 - numberOfAttempts) ) ;
-
-            if (numberOfAttempts >=3 )
-            {
-                user.setResetPasswordOtp(null);
-                user.setOtp(null);
-
-                user.setResetPasswordOtpExpirationTime(LocalDateTime.now());
-                user.setOtpExpirationTime(LocalDateTime.now());
-
-                user.setAttempts(0);
-                user.setResetPasswordOtpAttempts(0);
-
-                this.userRepository.save(user) ;
-
-                return
-                        ApiResponse.<Map>builder()
-                                .success(false)
-                                .message("You have exceeded the allowed number of attempts. Please resend the code again.")
-                                .data(m)
-                                .status(HttpStatus.UNAUTHORIZED.value())
-                                .build();
-            }
-            else {
-
-                return
-                        ApiResponse.<Map>builder()
-                                .success(false)
-                                .message("Invalid or expired OTP")
-                                .data(m)
-                                .status(HttpStatus.UNAUTHORIZED.value())
-                                .build();
-            }
-
-
+        if (!isValid) {
+            handleFailedAttempt(user, isForResetPassword);
         }
     }
+    private void handleFailedAttempt(User user, boolean isForResetPassword) {
+        int attempts;
+
+        if (isForResetPassword) {
+            user.setResetPasswordOtpAttempts(user.getResetPasswordOtpAttempts() + 1);
+            attempts = user.getResetPasswordOtpAttempts();
+        } else {
+            user.setAttempts(user.getAttempts() + 1);
+            attempts = user.getAttempts();
+        }
+
+        userRepository.save(user);
+
+        if (attempts >= otpProperties.getMaxAttempts()) {
+            clearOtpState(user, isForResetPassword);
+            throw new BadRequestException("Exceeded allowed attempts. Please request a new OTP.");
+        }
+
+        throw new BadRequestException(
+                String.format("Invalid OTP. %d attempts remaining.", otpProperties.getMaxAttempts() - attempts)
+        );
+    }
+
+    private AuthenticationResponse buildAuthResponse(User user, boolean isForResetPassword) {
+        String token = jwtService.generateToken(user, isForResetPassword);
+        authenticationService.revokeAllUserTokens(user);
+        authenticationService.saveUserToken(user, token);
+
+        if (isForResetPassword) {
+            return new AuthenticationResponse(token, null, user.isEnabled());
+        }
+
+        String refreshToken = jwtService.generateRefreshToken(user);
+        return new AuthenticationResponse(token, refreshToken, user.isEnabled());
+    }
+    private void resetUserOtpState(User user, boolean isForResetPassword) {
+        LocalDateTime past = LocalDateTime.now().minusMinutes(10);
+
+        user.setOtp(null);
+        user.setResetPasswordOtp(null);
+        user.setOtpExpirationTime(past);
+        user.setResetPasswordOtpExpirationTime(past);
+        user.setAttempts(0);
+        user.setResetPasswordOtpAttempts(0);
+        user.setNumberOfOtpSending(0);
+        user.setNumberOfresetPasswordOtpSending(0);
+        user.setOTPSendingBanTime(past);
+        user.setResetPasswordOTPSendingBanTime(past);
+        user.setLastOtpSentAt(past);
+        user.setLastResetPasswordOTPSentAt(past);
+
+        if (isForResetPassword) {
+            user.setMaxTimeToResetPassword(
+                    LocalDateTime.now().plusMinutes(jwtResetPasswordExpiration / 60000));
+        } else {
+            user.setEnabled(true);
+            createPublicPage(user);
+        }
+
+        userRepository.save(user);
+    }
+
+    private void createPublicPage(User user) {
+        PageEntity publicUserPage = PageEntity.builder()
+                .id(user.getId())
+                .user(user)
+                .pageType(PageType.PUBLIC.name())
+                .description("Hi there")
+                .build();
+        pageRepository.save(publicUserPage);
+    }
+
+    private void clearOtpState(User user, boolean isForResetPassword) {
+        if (isForResetPassword) {
+            user.setResetPasswordOtp(null);
+            user.setResetPasswordOtpExpirationTime(LocalDateTime.now());
+            user.setResetPasswordOtpAttempts(0);
+        } else {
+            user.setOtp(null);
+            user.setOtpExpirationTime(LocalDateTime.now());
+            user.setAttempts(0);
+        }
+        userRepository.save(user);
+    }
+
+
+
 
 
 

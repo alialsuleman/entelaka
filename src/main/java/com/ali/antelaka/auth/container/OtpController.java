@@ -1,6 +1,7 @@
 package com.ali.antelaka.auth.container;
 
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.auth.dto.AuthenticationResponse;
 import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.request.CheckOtpRequest;
 import com.ali.antelaka.user.request.SendOtpRequest;
@@ -42,8 +43,15 @@ public class OtpController {
 
     @PostMapping("/checkotp")
     public ResponseEntity<ApiResponse> checkotp(@Valid @RequestBody CheckOtpRequest request) {
-        ApiResponse res = this.otpService.checkOtp( request ) ;
-        return ResponseEntity.status(res.getStatus()).body(res) ;
+        AuthenticationResponse data = otpService.checkOtp(request);
+
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("OTP is valid")
+                .data(data)
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .build());
     }
 
 }
