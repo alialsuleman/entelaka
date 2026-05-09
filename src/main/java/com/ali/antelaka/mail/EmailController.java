@@ -11,9 +11,4 @@ public class EmailController {
     @Autowired
     private EmailService emailService;
 
-//    @GetMapping("/send")
-//    public String sendOtp(@RequestParam String to) {
-//        emailService.sendEmail(to, "OTP Verification", "Your OTP code is: 123456");
-//        return "Email sent!";
-//    }
 }

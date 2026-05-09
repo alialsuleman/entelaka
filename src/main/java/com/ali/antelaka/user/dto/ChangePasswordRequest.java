@@ -1,4 +1,4 @@
-package com.ali.antelaka.user.request;
+package com.ali.antelaka.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

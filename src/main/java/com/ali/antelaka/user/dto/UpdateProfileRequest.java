@@ -1,4 +1,4 @@
-package com.ali.antelaka.user.request;
+package com.ali.antelaka.user.dto;
 
 
 import lombok.Data;

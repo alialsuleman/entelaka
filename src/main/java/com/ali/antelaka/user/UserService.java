@@ -1,4 +1,4 @@
-package com.ali.antelaka.user.service;
+package com.ali.antelaka.user;
 
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.Service.AuthenticationService;
@@ -11,13 +11,12 @@ import com.ali.antelaka.notification.service.NotificationService;
 import com.ali.antelaka.page.entity.PageEntity;
 import com.ali.antelaka.page.entity.PageType;
 import com.ali.antelaka.page.PageRepository;
-import com.ali.antelaka.user.UserRepository;
 import com.ali.antelaka.user.dto.UserPublicProfileResponse;
 import com.ali.antelaka.user.dto.UserSearchDTO;
 import com.ali.antelaka.user.entity.Role;
 import com.ali.antelaka.user.entity.User;
-import com.ali.antelaka.user.request.ChangePasswordRequest;
-import com.ali.antelaka.user.request.UpdateProfileRequest;
+import com.ali.antelaka.user.dto.ChangePasswordRequest;
+import com.ali.antelaka.user.dto.UpdateProfileRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

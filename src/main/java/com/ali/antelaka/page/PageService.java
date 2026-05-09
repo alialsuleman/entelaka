@@ -13,16 +13,5 @@ import java.util.List;
 @Service
 public class PageService {
 
-    @Autowired
-    private  PageRepository pageRepository;
-    @Autowired
-    private UserRepository userRepository;
-
-
-    public PageEntity getPageById(Integer pageId) {
-        return pageRepository.findById(pageId)
-                .orElseThrow(() -> new RuntimeException("Page not found"));
-    }
-
 
 }

@@ -6,7 +6,7 @@ import com.ali.antelaka.auth.dto.AuthenticationResponse;
 import com.ali.antelaka.auth.Service.AuthenticationService;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.user.entity.User;
-import com.ali.antelaka.user.service.UserService;
+import com.ali.antelaka.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

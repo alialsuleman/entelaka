@@ -7,11 +7,6 @@ import com.ali.antelaka.post.entity.Post;
 import com.ali.antelaka.post.entity.SaveEntity;
 import com.ali.antelaka.token.Token;
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -19,6 +14,10 @@ import lombok.*;
 import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,6 +27,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Entity
 @Table(name = "_user")
 public class User implements UserDetails {
+
+    // ─────────────────────────────────────────────
+    //  Identity
+    // ─────────────────────────────────────────────
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,36 +42,100 @@ public class User implements UserDetails {
     @Column(name = "image_path")
     private String imagePath;
 
+    private String bio;
 
-
+    // ─────────────────────────────────────────────
+    //  Credentials & Role
+    // ─────────────────────────────────────────────
 
     @Email(message = "Email must be valid")
     @NotBlank(message = "Email required")
     @Column(unique = true)
     private String email;
+
     private String password;
-
-
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    private boolean enabled;
 
+    // ─────────────────────────────────────────────
+    //  Social links
+    // ─────────────────────────────────────────────
 
-    private String bio;
-
-    @Pattern(regexp = "^(https?://)?(www\\.)?(facebook\\.com|fb\\.com)/.*$", message = "Facebook link must be a valid Facebook URL")
+    @Pattern(
+            regexp  = "^(https?://)?(www\\.)?(facebook\\.com|fb\\.com)/.*$",
+            message = "Facebook link must be a valid Facebook URL"
+    )
     private String facebookLink;
 
-    @Pattern(regexp = "^(https?://)?(www\\.)?(linkedin\\.com)/.*$", message = "LinkedIn link must be a valid LinkedIn URL")
+    @Pattern(
+            regexp  = "^(https?://)?(www\\.)?(linkedin\\.com)/.*$",
+            message = "LinkedIn link must be a valid LinkedIn URL"
+    )
     private String linkedinLink;
 
-    @Pattern(regexp = "^(https?://)?(www\\.)?(t\\.me|telegram\\.me)/.*$", message = "Telegram link must be a valid Telegram URL")
+    @Pattern(
+            regexp  = "^(https?://)?(www\\.)?(t\\.me|telegram\\.me)/.*$",
+            message = "Telegram link must be a valid Telegram URL"
+    )
     private String telegramLink;
 
-    @Pattern(regexp = "^(https?://)?(wa\\.me|api\\.whatsapp\\.com)/.*$", message = "WhatsApp link must be a valid WhatsApp URL")
+    @Pattern(
+            regexp  = "^(https?://)?(wa\\.me|api\\.whatsapp\\.com)/.*$",
+            message = "WhatsApp link must be a valid WhatsApp URL"
+    )
     private String whatsappLink;
 
+    // ─────────────────────────────────────────────
+    //  OTP — registration
+    // ─────────────────────────────────────────────
+
+    private String otp;
+
+    @Builder.Default
+    private Integer numberOfOtpSending = 0;
+
+    @Builder.Default
+    private Integer attempts = 0;
+
+    @Builder.Default
+    private LocalDateTime otpExpirationTime = LocalDateTime.now().minusMinutes(10);
+
+    @Builder.Default
+    private LocalDateTime lastOtpSentAt = LocalDateTime.now().minusMinutes(10);
+
+    @Builder.Default
+    private LocalDateTime OTPSendingBanTime = LocalDateTime.now().minusMinutes(10);
+
+    // ─────────────────────────────────────────────
+    //  OTP — password reset
+    // ─────────────────────────────────────────────
+
+    private String resetPasswordOtp;
+
+    @Builder.Default
+    private Integer resetPasswordOtpAttempts = 0;
+
+    @Builder.Default
+    private Integer numberOfresetPasswordOtpSending = 0;
+
+    @Builder.Default
+    private LocalDateTime resetPasswordOtpExpirationTime = LocalDateTime.now().minusMinutes(10);
+
+    @Builder.Default
+    private LocalDateTime lastResetPasswordOTPSentAt = LocalDateTime.now().minusMinutes(10);
+
+    @Builder.Default
+    private LocalDateTime resetPasswordOTPSendingBanTime = LocalDateTime.now().minusMinutes(10);
+
+    @Builder.Default
+    private LocalDateTime maxTimeToResetPassword = LocalDateTime.now().minusMinutes(10);
+
+    // ─────────────────────────────────────────────
+    //  Relations
+    // ─────────────────────────────────────────────
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PageEntity> pages;
@@ -76,16 +143,14 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Post> posts;
 
-    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL ,  orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Token> tokens;
 
-
-    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Follow> following;
 
-    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true ,  fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Follow> followers;
-
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<LikeOnComment> likeOnComments;
@@ -94,35 +159,18 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<SaveEntity> saves;
 
-    private boolean enabled  ;
-
-
-    private String otp;
-    private String resetPasswordOtp;
-
-
-    @Builder.Default()  private Integer resetPasswordOtpAttempts =0  ;
-    @Builder.Default()  private Integer numberOfresetPasswordOtpSending =0  ;
-
-    @Builder.Default()  private LocalDateTime otpExpirationTime= LocalDateTime.now().minusMinutes(10)   ;
-
-    @Builder.Default()  private LocalDateTime maxTimeToResetPassword= LocalDateTime.now().minusMinutes(10)   ;
-
-    @Builder.Default()  private LocalDateTime resetPasswordOtpExpirationTime = LocalDateTime.now().minusMinutes(10)   ;
-    @Builder.Default()  private LocalDateTime resetPasswordOTPSendingBanTime = LocalDateTime.now().minusMinutes(10)   ;
-
-
-    @Builder.Default()  private Integer numberOfOtpSending  =0 ;
-    @Builder.Default()  private Integer attempts =0  ;
-    @Builder.Default()  private LocalDateTime lastOtpSentAt = LocalDateTime.now().minusMinutes(10)    ;
-    @Builder.Default()  private LocalDateTime lastResetPasswordOTPSentAt = LocalDateTime.now().minusMinutes(10)  ;
-    @Builder.Default()  private LocalDateTime OTPSendingBanTime = LocalDateTime.now().minusMinutes(10)    ;
-
-
+    // ─────────────────────────────────────────────
+    //  UserDetails
+    // ─────────────────────────────────────────────
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role.getAuthorities();
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -131,8 +179,8 @@ public class User implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return email;
+    public boolean isEnabled() {
+        return this.enabled;
     }
 
     @Override
@@ -148,14 +196,5 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return this.enabled;
-    }
-
-    public void setEnabled(boolean  x ) {
-     this.enabled =x ;
     }
 }

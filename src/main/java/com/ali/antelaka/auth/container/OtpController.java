@@ -3,8 +3,8 @@ package com.ali.antelaka.auth.container;
 import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.dto.AuthenticationResponse;
 import com.ali.antelaka.user.UserRepository;
-import com.ali.antelaka.user.request.CheckOtpRequest;
-import com.ali.antelaka.user.request.SendOtpRequest;
+import com.ali.antelaka.user.dto.CheckOtpRequest;
+import com.ali.antelaka.user.dto.SendOtpRequest;
 import com.ali.antelaka.auth.Service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @RestController

@@ -18,50 +18,5 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class PageController {
 
-    @Autowired
-    private PageService pageService ;
 
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse<PageEntity>>  createPage(
-            @RequestBody CreatePageBody createPageBody ,
-            Principal connectedUser
-    ) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-     //   this.pageService.createPage(createPageBody , user );
-        return null ;
-    }
-
-    @GetMapping("/{userId}/pages")
-    public ResponseEntity<ApiResponse<List<PageEntity>>> getUserPages(
-            @PathVariable Integer userId
-    ) {
-      //  pageService.getUserPages(userId) ;
-        return null ;
-    }
-
-    // ✅ جلب صفحة واحدة حسب ID
-    @GetMapping("/page/{pageId}")
-    public ResponseEntity<PageEntity> getPageById(
-            @PathVariable Integer pageId
-    ) {
-        return ResponseEntity.ok(pageService.getPageById(pageId));
-    }
-
-//    // ✅ تعديل بيانات صفحة
-//    @PutMapping("/page/{pageId}")
-//    public ResponseEntity<PageEntity> updatePage(
-//            @PathVariable Integer pageId,
-//            @RequestBody PageEntity updatedPage
-//    ) {
-//        return ResponseEntity.ok(pageService.updatePage(pageId, updatedPage));
-//    }
-
-    // ✅ حذف صفحة
-//    @DeleteMapping("/page/{pageId}")
-//    public ResponseEntity<Void> deletePage(
-//            @PathVariable Integer pageId
-//    ) {
-//        pageService.deletePage(pageId);
-//        return ResponseEntity.noContent().build();
-//    }
 }

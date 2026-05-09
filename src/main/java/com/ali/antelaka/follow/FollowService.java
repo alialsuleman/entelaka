@@ -1,5 +1,7 @@
 package com.ali.antelaka.follow;
 
+import com.ali.antelaka.exceptionHandler.exception.BadRequestException;
+import com.ali.antelaka.exceptionHandler.exception.NotFoundException;
 import com.ali.antelaka.notification.entity.NotificationRepository;
 import com.ali.antelaka.notification.entity.NotificationRequest;
 import com.ali.antelaka.notification.entity.NotificationType;
@@ -28,24 +30,24 @@ public class FollowService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Follow> follows = followRepository.findByFollowing(user, pageable);
 
-        return follows.map(Follow::getFollower); // نرجع فقط المستخدمين
+        return follows.map(Follow::getFollower);
     }
 
     public Page<User> getFollowing(User user, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Follow> follows = followRepository.findByFollower(user, pageable);
-        return follows.map(Follow::getFollowing); // نرجع فقط المستخدمين
+        return follows.map(Follow::getFollowing);
 
     }
 
     public Follow followUser(User follower, Integer followingId) {
 
         User following = userRepository.findById(followingId)
-                .orElseThrow(() -> new RuntimeException("Following not found"));
+                .orElseThrow(() -> new NotFoundException("Following not found"));
 
         if (follower.getId().equals(following.getId())) {
-            throw new RuntimeException("User cannot follow themselves");
+            throw new BadRequestException("User cannot follow themselves");
         }
         var x = this.followRepository.findByFollowerAndFollowing(follower , following).orElseGet(()->{
             Follow follow = Follow.builder()
@@ -53,19 +55,18 @@ public class FollowService {
                     .following(following)
                     .build();
             this.followRepository.save(follow);
-            System.out.println("added");
             return follow ;
         }) ;
 
 
 
         NotificationRequest request = NotificationRequest.builder()
-                .userId(following.getId()) // صاحب البوست
-                .senderId(follower.getId()) // المعلق
+                .userId(following.getId())
+                .senderId(follower.getId())
                 .type(NotificationType.NEW_FOLLOWER)
-                .entityId(null) // معرف البوست
-                .entityContent(null) // محتوى البوست
-                .customMessage(null) // نص التعليق (اختياري للإشعار)
+                .entityId(null)
+                .entityContent(null)
+                .customMessage(null)
                 .build();
 
         notificationService.createNotification(request  , null);
@@ -82,10 +83,9 @@ public class FollowService {
 
         followRepository.deleteByFollowerAndFollowing(user, following);
 
-        // حذف إشعار المتابعة
         notificationRepository.deleteByUserIdAndSenderIdAndType(
-                following.getId(),          // المستلم
-                user.getId(),               // المرسل (اللي عمل follow)
+                following.getId(),
+                user.getId(),
                 NotificationType.NEW_FOLLOWER
         );
     }

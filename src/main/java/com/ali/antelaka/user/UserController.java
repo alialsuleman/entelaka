@@ -5,10 +5,9 @@ import com.ali.antelaka.file.FileStorageService;
 import com.ali.antelaka.user.dto.UserPublicProfileResponse;
 import com.ali.antelaka.user.dto.UserSearchDTO;
 import com.ali.antelaka.user.entity.User;
-import com.ali.antelaka.user.request.ChangePasswordRequest;
-import com.ali.antelaka.user.request.UpdateProfileRequest;
+import com.ali.antelaka.user.dto.ChangePasswordRequest;
+import com.ali.antelaka.user.dto.UpdateProfileRequest;
 import com.ali.antelaka.auth.Service.OtpService;
-import com.ali.antelaka.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,9 +91,6 @@ public class UserController {
         if(user != null)
             profile = service.getUserProfileById(userId , user);
         else profile = service.getUserProfileById(userId , null);
-
-
-
 
 
         ApiResponse response = ApiResponse.builder()
