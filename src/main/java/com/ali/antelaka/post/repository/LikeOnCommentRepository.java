@@ -1,7 +1,6 @@
 package com.ali.antelaka.post.repository;
 
 
-import com.ali.antelaka.post.entity.LikeEntity;
 import com.ali.antelaka.post.entity.LikeOnComment;
 import org.springframework.data.jpa.repository.JpaRepository;
 

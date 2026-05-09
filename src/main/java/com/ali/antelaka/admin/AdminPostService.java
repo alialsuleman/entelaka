@@ -1,7 +1,6 @@
 package com.ali.antelaka.admin;
 
 
-import com.ali.antelaka.admin.*;
 import com.ali.antelaka.post.repository.CommentRepository;
 import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.Post;

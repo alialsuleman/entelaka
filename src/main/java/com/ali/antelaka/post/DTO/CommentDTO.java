@@ -3,10 +3,7 @@ package com.ali.antelaka.post.DTO;
 
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.post.entity.Comment;
-import com.ali.antelaka.post.entity.Post;
 import com.ali.antelaka.post.repository.LikeOnCommentRepository;
-import com.ali.antelaka.post.repository.LikeRepository;
-import com.ali.antelaka.post.repository.SaveRepository;
 import com.ali.antelaka.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 @Data
 @AllArgsConstructor

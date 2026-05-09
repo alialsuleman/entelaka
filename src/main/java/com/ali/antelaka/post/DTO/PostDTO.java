@@ -1,6 +1,5 @@
 package com.ali.antelaka.post.DTO;
 
-import com.ali.antelaka.follow.Follow;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.post.entity.Post;
 import com.ali.antelaka.post.entity.PostImage;
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Data
 @AllArgsConstructor
