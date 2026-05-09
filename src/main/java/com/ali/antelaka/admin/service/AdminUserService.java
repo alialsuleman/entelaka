@@ -1,7 +1,9 @@
-package com.ali.antelaka.admin;
+package com.ali.antelaka.admin.service;
 
 
 
+import com.ali.antelaka.admin.DTO.AdminUserResponseDTO;
+import com.ali.antelaka.admin.request.AdminUserSearchRequest;
 import com.ali.antelaka.follow.FollowRepository;
 import com.ali.antelaka.post.repository.PostRepository;
 import com.ali.antelaka.user.UserRepository;

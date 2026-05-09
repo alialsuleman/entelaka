@@ -1,6 +1,9 @@
-package com.ali.antelaka.admin;
+package com.ali.antelaka.admin.service;
 
 
+import com.ali.antelaka.admin.DTO.AdminCommentResponseDTO;
+import com.ali.antelaka.admin.DTO.AdminPostResponseDTO;
+import com.ali.antelaka.admin.request.AdminPostSearchRequest;
 import com.ali.antelaka.post.repository.CommentRepository;
 import com.ali.antelaka.post.entity.Comment;
 import com.ali.antelaka.post.entity.Post;

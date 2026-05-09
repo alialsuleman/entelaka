@@ -1,4 +1,4 @@
-package com.ali.antelaka.admin;
+package com.ali.antelaka.admin.DTO;
 
 
 import lombok.Builder;

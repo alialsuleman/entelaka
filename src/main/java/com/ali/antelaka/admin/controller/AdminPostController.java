@@ -1,9 +1,10 @@
-package com.ali.antelaka.admin;
+package com.ali.antelaka.admin.controller;
 
 
-import com.ali.antelaka.admin.*;
-import com.ali.antelaka.admin.AdminPostService;
+import com.ali.antelaka.admin.service.AdminPostService;
 import com.ali.antelaka.ApiResponse;
+import com.ali.antelaka.admin.DTO.AdminPostResponseDTO;
+import com.ali.antelaka.admin.request.AdminPostSearchRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
