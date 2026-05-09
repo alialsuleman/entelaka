@@ -1,11 +1,10 @@
 package com.ali.antelaka.auth.Service;
 
 
-import com.ali.antelaka.ApiResponse;
 import com.ali.antelaka.auth.OtpProperties;
 import com.ali.antelaka.auth.dto.AuthenticationResponse;
-import com.ali.antelaka.auth.dto.OtpContext;
-import com.ali.antelaka.auth.dto.OtpType;
+import com.ali.antelaka.auth.OtpContext;
+import com.ali.antelaka.auth.OtpType;
 import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.exceptionHandler.exception.BadRequestException;
 import com.ali.antelaka.exceptionHandler.exception.NotFoundException;
@@ -22,16 +21,10 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 @Service

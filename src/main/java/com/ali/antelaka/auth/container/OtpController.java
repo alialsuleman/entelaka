@@ -21,7 +21,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/auth")  // ← نفس المسار
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class OtpController {
 

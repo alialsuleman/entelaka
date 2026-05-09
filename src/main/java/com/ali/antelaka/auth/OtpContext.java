@@ -1,4 +1,4 @@
-package com.ali.antelaka.auth.dto;
+package com.ali.antelaka.auth;
 
 
 import lombok.Builder;
