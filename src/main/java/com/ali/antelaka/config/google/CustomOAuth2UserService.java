@@ -1,5 +1,6 @@
-package com.ali.antelaka.config;
+package com.ali.antelaka.config.google;
 
+import com.ali.antelaka.config.JwtService;
 import com.ali.antelaka.token.Token;
 import com.ali.antelaka.token.TokenRepository;
 import com.ali.antelaka.token.TokenType;
@@ -12,7 +13,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;

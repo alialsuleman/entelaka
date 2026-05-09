@@ -59,7 +59,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return;
       }
 
-      // Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQG1haWwuY29tIiwiaWF0IjoxNzU1MjY1MzcyLCJleHAiOjE3NTUzNTE3NzJ9.cS3cxxVYXcOK1fkvR0RMIuxVhOw3dFVgTSJvkTD8Ep8
       final String authHeader = request.getHeader("Authorization");
       final String jwt;
       final String userEmail;
@@ -131,7 +130,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     );
 
 
- System.out.println("123");
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
     String jsonResponse = mapper.writeValueAsString(apiResponse);
@@ -155,7 +153,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
 
 
-        System.out.println("123");
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String jsonResponse = mapper.writeValueAsString(apiResponse);

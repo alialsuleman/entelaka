@@ -27,9 +27,6 @@ public class JwtService {
   @Value("${application.security.jwt.refresh-token.expiration}")
   private long refreshExpiration;
 
-  public String extractUsername(String token) {
-    return extractClaim(token, Claims::getSubject);
-  }
 
   public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     final Claims claims = extractAllClaims(token);
@@ -37,45 +34,29 @@ public class JwtService {
   }
 
 
-  public String generateToken(UserDetails userDetails , boolean restPassword) {
-    if (restPassword == true)   return buildToken(new HashMap<>(), userDetails, jwtResetPasswordExpiration);
-    else return generateToken(new HashMap<>(), userDetails);
-  }
-
-  public String generateToken(
-      Map<String, Object> extraClaims,
-      UserDetails userDetails
-  ) {
-    return buildToken(extraClaims, userDetails, jwtExpiration);
-  }
-
-  public String generateRefreshToken(
-      UserDetails userDetails
-  ) {
-    return buildToken(new HashMap<>(), userDetails, refreshExpiration);
-  }
-
-  private String buildToken(
-          Map<String, Object> extraClaims,
-          UserDetails userDetails,
-          long expiration
-  ) {
-
-    System.out.println(new Date(System.currentTimeMillis()).toString()  +
-            " "  +
-            new Date(System.currentTimeMillis() + expiration).toString()
-            );
-
-
+  private Claims extractAllClaims(String token) {
     return Jwts
-            .builder()
-            .setClaims(extraClaims)
-            .setSubject(userDetails.getUsername())
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + expiration))
-            .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-            .compact();
+            .parserBuilder()
+            .setSigningKey(getSignInKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
   }
+
+  private Key getSignInKey() {
+    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    return Keys.hmacShaKeyFor(keyBytes);
+  }
+
+
+
+
+
+
+  public String extractUsername(String token) {
+    return extractClaim(token, Claims::getSubject);
+  }
+
 
   public boolean isTokenValid(String token, UserDetails userDetails) {
     final String username = extractUsername(token);
@@ -91,17 +72,65 @@ public class JwtService {
     return extractClaim(token, Claims::getExpiration);
   }
 
-  private Claims extractAllClaims(String token) {
-    return Jwts
-        .parserBuilder()
-        .setSigningKey(getSignInKey())
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+
+
+
+
+
+  public String generateToken(UserDetails userDetails , boolean restPassword) {
+    if (restPassword == true)   return buildToken(new HashMap<>(), userDetails, jwtResetPasswordExpiration);
+    else return generateToken(new HashMap<>(), userDetails);
   }
 
-  private Key getSignInKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-    return Keys.hmacShaKeyFor(keyBytes);
+  public String generateToken(
+          Map<String, Object> extraClaims,
+          UserDetails userDetails
+  ) {
+    return buildToken(extraClaims, userDetails, jwtExpiration);
   }
+
+  public String generateRefreshToken(
+          UserDetails userDetails
+  ) {
+    return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+  }
+
+  private String buildToken(
+          Map<String, Object> extraClaims,
+          UserDetails userDetails,
+          long expiration
+  ) {
+
+    System.out.println(new Date(System.currentTimeMillis()).toString()  +
+            " "  +
+            new Date(System.currentTimeMillis() + expiration).toString()
+    );
+
+
+    return Jwts
+            .builder()
+            .setClaims(extraClaims)
+            .setSubject(userDetails.getUsername())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+            .compact();
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
